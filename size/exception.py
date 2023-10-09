@@ -18,7 +18,15 @@ import argparse
 from typing import List
 from enum import Enum
 import random
+import os
+from pathlib import Path
+import shutil
 
+
+"""
+TODO:
+    1. Enable usage of rethrowing catch statements throughout function calls
+"""
 
 _UNIVERSAL_START = """
     #include <array>
@@ -42,7 +50,7 @@ class gen_class:
     def id(self):
         return self._id
 
-    def generate(self, id: int):
+    def generate_except(self):
         start = "class class_{id} {{ public:".format(id=self._id)
         ctor = """
         class_{id}(std::int32_t p_channel)
@@ -90,18 +98,24 @@ class gen_class:
         return start + ctor + copy_and_move_ctors + dtor + class_function + \
             footer
 
+    def generate_result(self):
+        return ""
+
 
 class gen_class_usage:
     def __init__(self, p_class: gen_class, p_trigger_count: int):
         self.m_class = p_class
         self.m_trigger_count = p_trigger_count
 
-    def generate(self, p_instance: int):
+    def generate_except(self, p_instance: int):
         return 'class_{id} instance_{instance}(side_effect);\n'.format(
             id=self.m_class.id,
             instance=p_instance) + \
             'instance_{instance}.trigger();\n'.format(instance=p_instance) \
             * self.m_trigger_count
+
+    def generate_result(self):
+        return ""
 
 
 class call_position(Enum):
@@ -117,7 +131,10 @@ class gen_function:
         self.usages = usages
         self.position = position
 
-    def generate(self, instance: int, group_id: int, is_terminal: bool = False):
+    def generate_except(self,
+                        instance: int,
+                        group_id: int,
+                        is_terminal: bool = False):
         start = """
         int funct_group{group}_{id}()
         {{
@@ -145,7 +162,7 @@ class gen_function:
             if (self.position == call_position.MIDDLE and
                     index == round(len(self.usages) / 2)):
                 body.append(next_function_call)
-            body.append(usages.generate(index))
+            body.append(usages.generate_except(index))
 
         footer = """
         return side_effect;
@@ -156,6 +173,9 @@ class gen_function:
             footer = next_function_call + footer
 
         return start + "\n".join(body) + footer
+
+    def generate_result(self):
+        return ""
 
 
 class gen_function_group:
@@ -169,12 +189,15 @@ class gen_function_group:
     def call_start(self, group_id: int):
         return "funct_group{group}_0();".format(group=group_id)
 
-    def generate(self, group_id: int):
+    def generate_except(self, group_id: int):
         list = []
         for index, funct in enumerate(self.functions):
-            list.append(funct.generate(index, group_id,
+            list.append(funct.generate_except(index, group_id,
                         index == len(self.functions) - 1))
         return '\n'.join(list)
+
+    def generate_result(self):
+        return ""
 
 
 class gen_exception_application:
@@ -282,10 +305,10 @@ class gen_exception_application:
         source.append(self.create_start())
 
         for index, classes in enumerate(self.classes):
-            source.append(classes.generate(index))
+            source.append(classes.generate_except(index))
 
         for index, function_group in enumerate(self.groups):
-            source.append(function_group.generate(index))
+            source.append(function_group.generate_except(index))
 
         return "\n".join(source)
 
@@ -311,13 +334,14 @@ def demo_source_generation():
 
     return gen_exception_application(error_type_size=4,
                                      groups=[group0, group0, group1, group1],
-                                     classes=[class_a, class_b, class_c]).generate()
+                                     classes=[class_a, class_b, class_c]).generate_except()
 
 
-def generate_random_source(rng: random.Random, error_size: int = 4):
+def generate_random_app(rng: random.Random):
     number_of_classes = rng.randint(0, 10)
     number_of_functions = rng.randint(0, 50)
     number_of_groups = rng.randint(0, 50)
+    error_type_size = rng.randint(0, 128)
 
     class_list = []
     class_usage_list = []
@@ -341,9 +365,107 @@ def generate_random_source(rng: random.Random, error_size: int = 4):
     for i in range(number_of_groups):
         group_list.append(gen_function_group(function_list))
 
-    return gen_exception_application(error_type_size=4,
-                                     groups=group_list,
-                                     classes=class_list).generate()
+    return (error_type_size, group_list, class_list)
+
+
+def generate_suite(rng: range.Range, number_of_files: int = 10):
+    cmake_header = """
+cmake_minimum_required(VERSION 3.20)
+
+project(exception_v_result VERSION 0.0.1 LANGUAGES CXX)
+
+macro(new_exception_source name)
+    add_executable(${name} main.cpp)
+    target_compile_options(${name} PRIVATE
+        -g
+        -Wall
+        -Wextra
+        -Wpedantic
+        -fno-rtti
+        -mthumb
+        -ffunction-sections
+        -fdata-sections
+        -mfloat-abi=hard
+        -mcpu=cortex-m4
+        -fexceptions
+    )
+    target_include_directories(${name} PUBLIC .)
+    target_compile_features(${name} PRIVATE cxx_std_20)
+    target_link_options(${name} PRIVATE
+        -Wl,--wrap=__cxa_allocate_exception
+        -Wl,--wrap=__cxa_free_exception
+        --specs=nosys.specs
+        --specs=picolibc.specs
+        -mfloat-abi=hard
+        -mcpu=cortex-m4
+        -mfpu=auto
+        -fno-rtti
+        -mthumb
+        -ffunction-sections
+        -fdata-sections
+        -fexceptions
+        -L${CMAKE_SOURCE_DIR}/
+        -T${CMAKE_SOURCE_DIR}/linker.ld
+    )
+    libhal_post_build(${name})
+    libhal_disassemble(${name})
+endmacro()
+
+macro(new_result_source name)
+    add_executable(${name} main.cpp)
+    target_compile_options(${name} PRIVATE
+        -g
+        -Wall
+        -Wextra
+        -Wpedantic
+        -fno-rtti
+        -mthumb
+        -ffunction-sections
+        -fdata-sections
+        -mfloat-abi=hard
+        -mcpu=cortex-m4
+        -fno-exceptions
+    )
+    target_include_directories(${name} PUBLIC .)
+    target_compile_features(${name} PRIVATE cxx_std_20)
+    target_link_options(${name} PRIVATE
+        --specs=nosys.specs
+        --specs=picolibc.specs
+        -mfloat-abi=hard
+        -mcpu=cortex-m4
+        -mfpu=auto
+        -fno-rtti
+        -mthumb
+        -ffunction-sections
+        -fdata-sections
+        -fno-exceptions
+        -L${CMAKE_SOURCE_DIR}/
+        -T${CMAKE_SOURCE_DIR}/linker.ld
+    )
+    libhal_post_build(${name})
+    libhal_disassemble(${name})
+endmacro()
+"""
+    os.mkdir("test_suite")
+
+    shutil.copy("resources/linker.ld", "test_suite/")
+    shutil.copy("resources/conanfile.ld", "test_suite/")
+    shutil.copy("resources/baremetal.profile", "test_suite/")
+    shutil.copy("resources/third_party/standard_arm.ld", "test_suite/")
+    # except_file_source
+    cmake_sources = []
+
+    for i in range(number_of_files):
+        app = generate_random_app(rng)
+        except_file_source = gen_exception_application(*app).generate()
+        Path(f"test_suite/except_{i}.cpp").write_text(except_file_source)
+        cmake_sources.append(f"new_exception_source(except_{i}.cpp)")
+        # result_file_source = gen_result_application(*app).generate()
+        # Path(f"test_suite/result_{i}.cpp").write_text(except_file_source)
+        # cmake_source = f"new_result_source(test_suite/result_{i}.cpp)"
+
+    cmake_final = cmake_header + "\n".join(cmake_sources)
+    Path("test_suite/CMakeLists.txt").write_text(cmake_final)
 
 
 if __name__ == "__main__":
@@ -364,7 +486,6 @@ if __name__ == "__main__":
                                  type=bool)
     args = parser.parse_args()
 
-    rng = random.Random()
-    rng.seed(0)
-
-    print(generate_random_source(rng=rng))
+    # rng = random.Random()
+    # rng.seed(0)
+    # print(generate_random_source(rng=rng))

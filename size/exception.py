@@ -17,6 +17,7 @@
 import argparse
 from typing import List
 from enum import Enum
+import random
 
 
 _UNIVERSAL_START = """
@@ -32,16 +33,16 @@ _UNIVERSAL_START = """
     """
 
 
-class exception_class:
+class gen_class:
     def __init__(self, id: int, has_dtor: bool = True):
-        self.has_dtor = has_dtor
         self._id = id
+        self.has_dtor = has_dtor
 
     @property
     def id(self):
         return self._id
 
-    def generate(self):
+    def generate(self, id: int):
         start = "class class_{id} {{ public:".format(id=self._id)
         ctor = """
         class_{id}(std::int32_t p_channel)
@@ -90,8 +91,8 @@ class exception_class:
             footer
 
 
-class exception_class_usage:
-    def __init__(self, p_class: exception_class, p_trigger_count: int):
+class gen_class_usage:
+    def __init__(self, p_class: gen_class, p_trigger_count: int):
         self.m_class = p_class
         self.m_trigger_count = p_trigger_count
 
@@ -109,16 +110,16 @@ class call_position(Enum):
     BOTTOM = 3
 
 
-class exception_function:
+class gen_function:
     def __init__(self,
-                 usages: List[exception_class_usage],
+                 usages: List[gen_class_usage],
                  position: call_position):
         self.usages = usages
         self.position = position
 
     def generate(self, instance: int, group_id: int, is_terminal: bool = False):
         start = """
-        int funct_{group}_{id}()
+        int funct_group{group}_{id}()
         {{
             side_effect = side_effect + 1;
         """.format(id=instance, group=group_id)
@@ -131,9 +132,9 @@ class exception_function:
                 }
                 """
         else:
-            start = 'int funct_{group}_{id}(); \n'.format(
+            start = 'int funct_group{group}_{id}(); \n'.format(
                 group=group_id, id=instance + 1) + start
-            next_function_call = "funct_{group}_{id}();".format(
+            next_function_call = "funct_group{group}_{id}();".format(
                 group=group_id, id=instance + 1)
 
         if self.position == call_position.TOP:
@@ -157,16 +158,16 @@ class exception_function:
         return start + "\n".join(body) + footer
 
 
-class exception_function_group:
+class gen_function_group:
     def __init__(self,
-                 functions: List[exception_function]):
+                 functions: List[gen_function]):
         self.functions = functions
 
     def forward_declare_start(self, group_id: int):
-        return "int funct_{group}_0();".format(group=group_id)
+        return "int funct_group{group}_0();".format(group=group_id)
 
     def call_start(self, group_id: int):
-        return "funct_{group}_0();".format(group=group_id)
+        return "funct_group{group}_0();".format(group=group_id)
 
     def generate(self, group_id: int):
         list = []
@@ -176,7 +177,7 @@ class exception_function_group:
         return '\n'.join(list)
 
 
-class exception_application:
+class gen_exception_application:
     _EXCEPTION_START = """
     [[noreturn]] void terminate() noexcept
     {
@@ -244,11 +245,11 @@ class exception_application:
 
     def __init__(self,
                  error_type_size: int,
-                 groups: List[exception_function_group],
-                 exception_classes: List[exception_class]):
+                 groups: List[gen_function_group],
+                 classes: List[gen_class]):
         self.error_type_size = error_type_size
         self.groups = groups
-        self.exception_classes = exception_classes
+        self.classes = classes
 
     def create_start(self):
         start_template = """
@@ -280,8 +281,8 @@ class exception_application:
 
         source.append(self.create_start())
 
-        for classes in self.exception_classes:
-            source.append(classes.generate())
+        for index, classes in enumerate(self.classes):
+            source.append(classes.generate(index))
 
         for index, function_group in enumerate(self.groups):
             source.append(function_group.generate(index))
@@ -289,28 +290,60 @@ class exception_application:
         return "\n".join(source)
 
 
-def exception_source():
-    class_a = exception_class(0)
-    class_b = exception_class(1)
-    class_c = exception_class(2, False)
+def demo_source_generation():
+    class_a = gen_class()
+    class_b = gen_class()
+    class_c = gen_class(False)
 
-    usage1 = exception_class_usage(class_a, 2)
-    usage2 = exception_class_usage(class_b, 1)
-    usage3 = exception_class_usage(class_c, 3)
+    usage1 = gen_class_usage(class_a, 2)
+    usage2 = gen_class_usage(class_b, 1)
+    usage3 = gen_class_usage(class_c, 3)
 
-    function0 = exception_function([usage1, usage3], call_position.MIDDLE)
-    function1 = exception_function([usage2, usage2, usage2], call_position.TOP)
-    function2 = exception_function(
+    function0 = gen_function([usage1, usage3], call_position.MIDDLE)
+    function1 = gen_function([usage2, usage2, usage2], call_position.TOP)
+    function2 = gen_function(
         [usage1, usage2, usage3, usage3], call_position.BOTTOM)
-    function3 = exception_function(
+    function3 = gen_function(
         [usage2, usage2, usage2], call_position.BOTTOM)
-    group0 = exception_function_group([function0, function1])
-    group1 = exception_function_group(
+    group0 = gen_function_group([function0, function1])
+    group1 = gen_function_group(
         [function0, function1, function2, function3])
 
-    return exception_application(error_type_size=4,
-                                 groups=[group0, group0, group1, group1],
-                                 exception_classes=[class_a, class_b, class_c]).generate()
+    return gen_exception_application(error_type_size=4,
+                                     groups=[group0, group0, group1, group1],
+                                     classes=[class_a, class_b, class_c]).generate()
+
+
+def generate_random_source(rng: random.Random, error_size: int = 4):
+    number_of_classes = rng.randint(0, 10)
+    number_of_functions = rng.randint(0, 50)
+    number_of_groups = rng.randint(0, 50)
+
+    class_list = []
+    class_usage_list = []
+    function_list = []
+    group_list = []
+
+    for i in range(number_of_classes):
+        has_dtor = rng.randint(0, 1)
+        class_list.append(gen_class(id=i, has_dtor=has_dtor))
+
+    for i in range(number_of_classes):
+        usages = rng.randint(0, 5)
+        class_usage_list.append(gen_class_usage(class_list[i], usages))
+
+    for i in range(number_of_functions):
+        sample_size = rng.randint(0, number_of_classes)
+        position = rng.choice(list(call_position))
+        function_list.append(gen_function(usages=rng.sample(
+            class_usage_list, sample_size), position=position))
+
+    for i in range(number_of_groups):
+        group_list.append(gen_function_group(function_list))
+
+    return gen_exception_application(error_type_size=4,
+                                     groups=group_list,
+                                     classes=class_list).generate()
 
 
 if __name__ == "__main__":
@@ -330,4 +363,8 @@ if __name__ == "__main__":
                                  default=False,
                                  type=bool)
     args = parser.parse_args()
-    print(exception_source())
+
+    rng = random.Random()
+    rng.seed(0)
+
+    print(generate_random_source(rng=rng))

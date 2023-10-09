@@ -33,16 +33,16 @@ _UNIVERSAL_START = """
 
 
 class exception_class:
-    def __init__(self, id: int, has_dtor: bool):
-        self.id = id
+    def __init__(self, id: int, has_dtor: bool = True):
         self.has_dtor = has_dtor
+        self._id = id
 
     @property
     def id(self):
-        return self.id
+        return self._id
 
     def generate(self):
-        start = "class class_{id} {{ public:".format(id=self.id)
+        start = "class class_{id} {{ public:".format(id=self._id)
         ctor = """
         class_{id}(std::int32_t p_channel)
             : m_channel(p_channel)
@@ -52,26 +52,26 @@ class exception_class:
             }}
             side_effect = side_effect + 1;
         }}
-        """.format(id=self.id)
+        """.format(id=self._id)
 
         copy_and_move_ctors = """
         class_{id}(class_{id}&) = delete;
         class_{id}& operator=(class_{id}&) = delete;
         class_{id}(class_{id}&&) noexcept = default;
         class_{id}& operator=(class_{id}&&) noexcept = default;
-        """.format(id=self.id)
+        """.format(id=self._id)
 
         if self.has_dtor:
             dtor = """~class_{id}()
             {{
                 side_effect = side_effect & ~(1 << m_channel);
             }}
-            """.format(id=self.id)
+            """.format(id=self._id)
         else:
-            dtor = "~class_{id}() = default;"
+            dtor = "~class_{id}() = default;".format(id=self._id)
 
         class_function = """
-        void class_function()
+        void trigger()
         {
             if (m_channel >= 1'000'000'000) {
                 throw my_error_t{ .data = { 0xAA, 0xBB, 0x33, 0x44 } };
@@ -83,8 +83,8 @@ class exception_class:
         footer = """
         private:
             std::int32_t m_channel = 0;
-        };
-        """.format(id=self.id)
+        }};
+        """.format(id=self._id)
 
         return start + ctor + copy_and_move_ctors + dtor + class_function + \
             footer
@@ -96,63 +96,84 @@ class exception_class_usage:
         self.m_trigger_count = p_trigger_count
 
     def generate(self, p_instance: int):
-        return 'class_{id} instance_{index}(side_effect);\n' + \
-            'instance_{index}.trigger();\n'.format(id=p_instance) \
-            * self._m_trigger_count
+        return 'class_{id} instance_{instance}(side_effect);\n'.format(
+            id=self.m_class.id,
+            instance=p_instance) + \
+            'instance_{instance}.trigger();\n'.format(instance=p_instance) \
+            * self.m_trigger_count
 
 
 class call_position(Enum):
     TOP = 1
     MIDDLE = 2
-    END = 3
+    BOTTOM = 3
 
 
 class exception_function:
     def __init__(self,
-                 id: int,
-                 group: int,
-                 exception_class_usage: List[exception_class_usage],
+                 usages: List[exception_class_usage],
                  position: call_position):
-        self.id = id
-        self.group = group
-        self.exception_class_usage = exception_class_usage
+        self.usages = usages
         self.position = position
 
-    @property
-    def id(self):
-        return self.id
-
-    def generate(self, is_terminal: bool):
-        if is_terminal:
-            next_function_call = ""
-        else:
-            next_function_call = "funct_{group}_{id}()\n".format(
-                group=self.group, id=self.id + 1)
-
+    def generate(self, instance: int, group_id: int, is_terminal: bool = False):
         start = """
         int funct_{group}_{id}()
         {{
             side_effect = side_effect + 1;
-        """.format(id=self.id, group=self.group)
+        """.format(id=instance, group=group_id)
+
+        if is_terminal:
+            next_function_call = """
+                if (side_effect > 0)
+                {
+                    throw my_error_t{ .data = { 0xDE, 0xAD } };
+                }
+                """
+        else:
+            start = 'int funct_{group}_{id}(); \n'.format(
+                group=group_id, id=instance + 1) + start
+            next_function_call = "funct_{group}_{id}();".format(
+                group=group_id, id=instance + 1)
 
         if self.position == call_position.TOP:
             start = start + next_function_call
 
         body = []
-        for index, usages in enumerate(self.exception_class_usage):
-            if index == round(len(self.exception_class_usage)):
+        for index, usages in enumerate(self.usages):
+            if (self.position == call_position.MIDDLE and
+                    index == round(len(self.usages) / 2)):
                 body.append(next_function_call)
             body.append(usages.generate(index))
 
         footer = """
         return side_effect;
-        }}
+        }
         """
 
-        if self.position == call_position.TOP:
+        if self.position == call_position.BOTTOM:
             footer = next_function_call + footer
 
         return start + "\n".join(body) + footer
+
+
+class exception_function_group:
+    def __init__(self,
+                 functions: List[exception_function]):
+        self.functions = functions
+
+    def forward_declare_start(self, group_id: int):
+        return "int funct_{group}_0();".format(group=group_id)
+
+    def call_start(self, group_id: int):
+        return "funct_{group}_0();".format(group=group_id)
+
+    def generate(self, group_id: int):
+        list = []
+        for index, funct in enumerate(self.functions):
+            list.append(funct.generate(index, group_id,
+                        index == len(self.functions) - 1))
+        return '\n'.join(list)
 
 
 class exception_application:
@@ -164,8 +185,8 @@ class exception_application:
     }
     }
 
-    namespace __cxxabiv1 {
-    std::terminate_handler __terminate_handler = terminate;
+    namespace __cxxabiv1 {  // NOLINT
+    std::terminate_handler __terminate_handler = terminate;  // NOLINT
     }
 
     extern "C"
@@ -180,7 +201,7 @@ class exception_application:
     {
         return -1;
     }
-    struct _reent* _impure_ptr = nullptr;
+    struct _reent* _impure_ptr = nullptr;  // NOLINT
     int getpid()
     {
         return 1;
@@ -188,7 +209,7 @@ class exception_application:
 
     std::array<std::uint8_t, 1024> storage;
     std::span<std::uint8_t> storage_left(storage);
-    void* __wrap___cxa_allocate_exception(unsigned int p_size)
+    void* __wrap___cxa_allocate_exception(unsigned int p_size)  // NOLINT
     {
         // I only know this needs to be 128 because of the disassembly. I cannot
         // figure out why its needed yet, but maybe the answer is in the
@@ -201,7 +222,7 @@ class exception_application:
         storage_left = storage_left.subspan(p_size + offset);
         return memory;
     }
-    void __wrap___cxa_free_exception(void*)
+    void __wrap___cxa_free_exception(void*)  // NOLINT
     {
         storage_left = std::span<std::uint8_t>(storage);
     }
@@ -222,37 +243,74 @@ class exception_application:
     """
 
     def __init__(self,
-                 filename: str,
                  error_type_size: int,
-                 exception_function: List[exception_function],
+                 groups: List[exception_function_group],
                  exception_classes: List[exception_class]):
-        self.filename = filename
         self.error_type_size = error_type_size
-        self.exception_function = exception_function
+        self.groups = groups
         self.exception_classes = exception_classes
 
-    @property
-    def filename(self):
-        return self.filename
+    def create_start(self):
+        start_template = """
+        {forward_delcaration}
+        int start() {{
+            {body}
+        }}
+        """
+
+        forwards = []
+        calls = []
+
+        for index, group in enumerate(self.groups):
+            forwards.append(group.forward_declare_start(index))
+            calls.append(group.call_start(index))
+
+        return start_template.format(forward_delcaration="\n".join(forwards),
+                                     body="\n".join(calls))
 
     def generate(self):
         global _UNIVERSAL_START
         error_type = """
         struct my_error_t
-        {
-        std::array<std::uint8_t, {size}> data;
-        }
+        {{
+            std::array<std::uint8_t, {size}> data;
+        }};
         """.format(size=self.error_type_size)
         source = [_UNIVERSAL_START, error_type, self._EXCEPTION_START]
+
+        source.append(self.create_start())
 
         for classes in self.exception_classes:
             source.append(classes.generate())
 
-        for index, function in enumerate(self.exception_function):
-            source.append(function.generate(
-                index == len(self.exception_function) - 1))
+        for index, function_group in enumerate(self.groups):
+            source.append(function_group.generate(index))
 
         return "\n".join(source)
+
+
+def exception_source():
+    class_a = exception_class(0)
+    class_b = exception_class(1)
+    class_c = exception_class(2, False)
+
+    usage1 = exception_class_usage(class_a, 2)
+    usage2 = exception_class_usage(class_b, 1)
+    usage3 = exception_class_usage(class_c, 3)
+
+    function0 = exception_function([usage1, usage3], call_position.MIDDLE)
+    function1 = exception_function([usage2, usage2, usage2], call_position.TOP)
+    function2 = exception_function(
+        [usage1, usage2, usage3, usage3], call_position.BOTTOM)
+    function3 = exception_function(
+        [usage2, usage2, usage2], call_position.BOTTOM)
+    group0 = exception_function_group([function0, function1])
+    group1 = exception_function_group(
+        [function0, function1, function2, function3])
+
+    return exception_application(error_type_size=4,
+                                 groups=[group0, group0, group1, group1],
+                                 exception_classes=[class_a, class_b, class_c]).generate()
 
 
 if __name__ == "__main__":
@@ -272,22 +330,4 @@ if __name__ == "__main__":
                                  default=False,
                                  type=bool)
     args = parser.parse_args()
-
-    class_a = exception_class(0, False)
-    class_b = exception_class(1, False)
-    class_c = exception_class(2, False)
-
-    usage1 = exception_class_usage(class_a, 2)
-    usage2 = exception_class_usage(class_b, 1)
-    usage3 = exception_class_usage(class_c, 3)
-
-    function0 = exception_function(0, 0, [usage1, usage3], call_position.MIDDLE)
-    function1 = exception_function(
-        1, 0, [usage2, usage2, usage2], call_position.TOP)
-
-    app0 = exception_application(filename="test.cpp",
-                                 error_type_size=4,
-                                 exception_function=[function0, function1],
-                                 exception_classes=[class_a, class_b, class_c])
-
-    app0.generate()
+    print(exception_source())

@@ -99,7 +99,64 @@ class gen_class:
             footer
 
     def generate_result(self):
-        return ""
+        start = "class class_{id} {{ public:".format(id=self._id)
+        factory = """
+        static make(std::int32_t p_channel)
+        {{
+            if (p_channel >= 1'000'000'000) {{
+                return tl::unexpected(
+                    my_error_t{{ .data = {{ 0x55, 0xAA, 0x33, 0x44 }} }}
+                );
+            }}
+            side_effect = side_effect + 1;
+        }}
+        """
+
+        copy_and_move_ctors = """
+        class_{id}(class_{id}&) = delete;
+        class_{id}& operator=(class_{id}&) = delete;
+        class_{id}(class_{id}&&) noexcept = default;
+        class_{id}& operator=(class_{id}&&) noexcept = default;
+        """.format(id=self._id)
+
+        if self.has_dtor:
+            dtor = """~class_{id}()
+            {{
+                side_effect = side_effect & ~(1 << m_channel);
+            }}
+            """.format(id=self._id)
+        else:
+            dtor = "~class_{id}() = default;".format(id=self._id)
+
+        class_function = """
+        tl::result<void, my_error_t> trigger()
+        {
+            if (m_channel >= 1'000'000'000) {
+                return tl::unexpected(
+                    my_error_t{ .data = { 0xAA, 0xBB, 0x33, 0x44 } }
+                );
+            }
+            side_effect = side_effect + 1;
+
+            return {};
+        }
+        """
+
+        ctor = """
+        private:
+        class_{id}(std::int32_t p_channel)
+            : m_channel(p_channel)
+        {{
+        }}
+        """.format(id=self._id)
+
+        footer = """
+            std::int32_t m_channel = 0;
+        }};
+        """.format(id=self._id)
+
+        return start + factory + copy_and_move_ctors + dtor + class_function + \
+            ctor + footer
 
 
 class gen_class_usage:
@@ -114,8 +171,26 @@ class gen_class_usage:
             'instance_{instance}.trigger();\n'.format(instance=p_instance) \
             * self.m_trigger_count
 
-    def generate_result(self):
-        return ""
+    def generate_result(self, p_instance: int):
+        create = """
+        auto instance_{instance} = class_{id}::make(side_effect);
+        if (!instance_{instance}) {{
+            return tl::unexpected(instance_{instance}.error());
+        }}
+        """.format(
+            id=self.m_class.id,
+            instance=p_instance)
+
+        # NOTE: I scoped this so I wouldn't have to come up with random variable
+        # names for each result object
+        call = """{{
+        auto scoped_result = instance_{instance}.trigger();
+        if (!scoped_result) {{
+            return tl::unexpected(scoped_result.error());
+        }}
+        }}""".format(instance=p_instance) * self.m_trigger_count
+
+        return create + call
 
 
 class call_position(Enum):
@@ -174,8 +249,53 @@ class gen_function:
 
         return start + "\n".join(body) + footer
 
-    def generate_result(self):
-        return ""
+    def generate_result(self,
+                        instance: int,
+                        group_id: int,
+                        is_terminal: bool = False):
+        start = """
+        tl::expected<int, my_error_t> funct_group{group}_{id}()
+        {{
+            side_effect = side_effect + 1;
+        """.format(id=instance, group=group_id)
+
+        if is_terminal:
+            next_function_call = """
+                if (side_effect > 0)
+                {
+                    return tl::unexpected(my_error_t{ .data = { 0xDE, 0xAD } });
+                }
+                """
+        else:
+            start = """
+            tl::unexpected<int, my_error_t> funct_group{group}_{id}(); \n
+            """.format(
+                group=group_id, id=instance + 1) + start
+            next_function_call = """
+                if(auto result = funct_group{group}_{id}(); !result) {{
+                    return tl::unexpected(result.error());
+                }}""".format(
+                group=group_id, id=instance + 1)
+
+        if self.position == call_position.TOP:
+            start = start + next_function_call
+
+        body = []
+        for index, usages in enumerate(self.usages):
+            if (self.position == call_position.MIDDLE and
+                    index == round(len(self.usages) / 2)):
+                body.append(next_function_call)
+            body.append(usages.generate_result(index))
+
+        footer = """
+        return side_effect;
+        }
+        """
+
+        if self.position == call_position.BOTTOM:
+            footer = next_function_call + footer
+
+        return start + "\n".join(body) + footer
 
 
 class gen_function_group:
@@ -183,11 +303,21 @@ class gen_function_group:
                  functions: List[gen_function]):
         self.functions = functions
 
-    def forward_declare_start(self, group_id: int):
+    def except_forward_declare_start(self, group_id: int):
         return "int funct_group{group}_0();".format(group=group_id)
 
-    def call_start(self, group_id: int):
+    def except_call_start(self, group_id: int):
         return "funct_group{group}_0();".format(group=group_id)
+
+    def result_forward_declare_start(self, group_id: int):
+        return "tl::expected<int, my_error_t> funct_group{group}_0();".format(group=group_id)
+
+    def result_call_start(self, group_id: int):
+        return """
+        if (auto result = funct_group{group}_0(); !result) {
+            return tl::unexpected(result.error());
+        }
+        """.format(group=group_id)
 
     def generate_except(self, group_id: int):
         list = []
@@ -196,8 +326,12 @@ class gen_function_group:
                         index == len(self.functions) - 1))
         return '\n'.join(list)
 
-    def generate_result(self):
-        return ""
+    def generate_result(self, group_id: int):
+        list = []
+        for index, funct in enumerate(self.functions):
+            list.append(funct.generate_result(index, group_id,
+                        index == len(self.functions) - 1))
+        return '\n'.join(list)
 
 
 class gen_exception_application:
@@ -260,7 +394,7 @@ class gen_exception_application:
     } catch (const my_error_t& p_error) {
         return_code = p_error.data[0];
     } catch (...) {
-        return_code -1;
+        return_code = -1;
     }
     return return_code;
     }
@@ -279,6 +413,7 @@ class gen_exception_application:
         {forward_delcaration}
         int start() {{
             {body}
+            return side_effect;
         }}
         """
 
@@ -286,8 +421,8 @@ class gen_exception_application:
         calls = []
 
         for index, group in enumerate(self.groups):
-            forwards.append(group.forward_declare_start(index))
-            calls.append(group.call_start(index))
+            forwards.append(group.except_forward_declare_start(index))
+            calls.append(group.except_call_start(index))
 
         return start_template.format(forward_delcaration="\n".join(forwards),
                                      body="\n".join(calls))
@@ -304,11 +439,75 @@ class gen_exception_application:
 
         source.append(self.create_start())
 
-        for index, classes in enumerate(self.classes):
-            source.append(classes.generate_except(index))
+        for classes in self.classes:
+            source.append(classes.generate_except())
 
         for index, function_group in enumerate(self.groups):
             source.append(function_group.generate_except(index))
+
+        return "\n".join(source)
+
+
+class gen_result_application:
+    _EXCEPTION_START = """
+    tl::expected<int, my_error_t> start();
+    int main()
+    {
+        volatile int return_code = 0;
+        auto result = start();
+        if (!result) {
+            return_code = result.data[0];
+        } else {
+            return_code = result.value();
+        }
+        return return_code;
+    }
+    """
+
+    def __init__(self,
+                 error_type_size: int,
+                 groups: List[gen_function_group],
+                 classes: List[gen_class]):
+        self.error_type_size = error_type_size
+        self.groups = groups
+        self.classes = classes
+
+    def create_start(self):
+        start_template = """
+        {forward_delcaration}
+        tl::expected<int, my_error_t> start() {{
+            {body}
+            return side_effect;
+        }}
+        """
+
+        forwards = []
+        calls = []
+
+        for index, group in enumerate(self.groups):
+            forwards.append(group.result_forward_declare_start(index))
+            calls.append(group.result_call_start(index))
+
+        return start_template.format(forward_delcaration="\n".join(forwards),
+                                     body="\n".join(calls))
+
+    def generate(self):
+        global _UNIVERSAL_START
+        error_type = """
+        struct my_error_t
+        {{
+            std::array<std::uint8_t, {size}> data;
+        }};
+        """.format(size=self.error_type_size)
+        source = [_UNIVERSAL_START, error_type, self._EXCEPTION_START]
+
+        source.append(self.create_start())
+
+        for classes in self.classes:
+            source.append(classes.generate_result())
+
+        for index, function_group in enumerate(self.groups):
+            source.append(function_group.generate_result(index))
 
         return "\n".join(source)
 
@@ -338,10 +537,10 @@ def demo_source_generation():
 
 
 def generate_random_app(rng: random.Random):
-    number_of_classes = rng.randint(0, 10)
-    number_of_functions = rng.randint(0, 50)
-    number_of_groups = rng.randint(0, 50)
-    error_type_size = rng.randint(0, 128)
+    number_of_classes = rng.randint(1, 10)
+    number_of_functions = rng.randint(1, 50)
+    number_of_groups = rng.randint(1, 50)
+    error_type_size = rng.randint(4, 128)
 
     class_list = []
     class_usage_list = []
@@ -350,7 +549,7 @@ def generate_random_app(rng: random.Random):
 
     for i in range(number_of_classes):
         has_dtor = rng.randint(0, 1)
-        class_list.append(gen_class(id=i, has_dtor=has_dtor))
+        class_list.append(gen_class(id=i, has_dtor=bool(has_dtor)))
 
     for i in range(number_of_classes):
         usages = rng.randint(0, 5)
@@ -368,14 +567,14 @@ def generate_random_app(rng: random.Random):
     return (error_type_size, group_list, class_list)
 
 
-def generate_suite(rng: range.Range, number_of_files: int = 10):
+def generate_suite(rng: random.Random, number_of_files: int = 10):
     cmake_header = """
 cmake_minimum_required(VERSION 3.20)
 
 project(exception_v_result VERSION 0.0.1 LANGUAGES CXX)
 
 macro(new_exception_source name)
-    add_executable(${name} main.cpp)
+    add_executable(${name} ${name}.cpp)
     target_compile_options(${name} PRIVATE
         -g
         -Wall
@@ -412,7 +611,7 @@ macro(new_exception_source name)
 endmacro()
 
 macro(new_result_source name)
-    add_executable(${name} main.cpp)
+    add_executable(${name} ${name}.cpp)
     target_compile_options(${name} PRIVATE
         -g
         -Wall
@@ -446,20 +645,26 @@ macro(new_result_source name)
     libhal_disassemble(${name})
 endmacro()
 """
-    os.mkdir("test_suite")
+
+    os.mkdir("test_suite/")
+    os.mkdir("test_suite/third_party/")
 
     shutil.copy("resources/linker.ld", "test_suite/")
-    shutil.copy("resources/conanfile.ld", "test_suite/")
+    shutil.copy("resources/conanfile.py", "test_suite/")
     shutil.copy("resources/baremetal.profile", "test_suite/")
-    shutil.copy("resources/third_party/standard_arm.ld", "test_suite/")
-    # except_file_source
+    shutil.copy("resources/third_party/standard_arm.ld",
+                "test_suite/third_party/")
+
     cmake_sources = []
 
     for i in range(number_of_files):
         app = generate_random_app(rng)
-        except_file_source = gen_exception_application(*app).generate()
+        except_file_source = gen_exception_application(
+            error_type_size=app[0],
+            groups=app[1],
+            classes=app[2]).generate()
         Path(f"test_suite/except_{i}.cpp").write_text(except_file_source)
-        cmake_sources.append(f"new_exception_source(except_{i}.cpp)")
+        cmake_sources.append(f"new_exception_source(except_{i})")
         # result_file_source = gen_result_application(*app).generate()
         # Path(f"test_suite/result_{i}.cpp").write_text(except_file_source)
         # cmake_source = f"new_result_source(test_suite/result_{i}.cpp)"
@@ -486,6 +691,7 @@ if __name__ == "__main__":
                                  type=bool)
     args = parser.parse_args()
 
-    # rng = random.Random()
-    # rng.seed(0)
+    rng = random.Random()
+    rng.seed(0)
+    generate_suite(rng)
     # print(generate_random_source(rng=rng))

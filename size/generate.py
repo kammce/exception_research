@@ -101,7 +101,7 @@ class gen_class:
     def generate_result(self):
         start = "class class_{id} {{ public:".format(id=self._id)
         factory = """
-        static make(std::int32_t p_channel)
+        static tl::expected<class_{id}, my_error_t> make(std::int32_t p_channel)
         {{
             if (p_channel >= 1'000'000'000) {{
                 return tl::unexpected(
@@ -109,8 +109,9 @@ class gen_class:
                 );
             }}
             side_effect = side_effect + 1;
+            return class_{id}(p_channel);
         }}
-        """
+        """.format(id=self._id)
 
         copy_and_move_ctors = """
         class_{id}(class_{id}&) = delete;
@@ -129,7 +130,7 @@ class gen_class:
             dtor = "~class_{id}() = default;".format(id=self._id)
 
         class_function = """
-        tl::result<void, my_error_t> trigger()
+        tl::expected<void, my_error_t> trigger()
         {
             if (m_channel >= 1'000'000'000) {
                 return tl::unexpected(
@@ -184,7 +185,7 @@ class gen_class_usage:
         # NOTE: I scoped this so I wouldn't have to come up with random variable
         # names for each result object
         call = """{{
-        auto scoped_result = instance_{instance}.trigger();
+        auto scoped_result = instance_{instance}.value().trigger();
         if (!scoped_result) {{
             return tl::unexpected(scoped_result.error());
         }}
@@ -213,7 +214,8 @@ class gen_function:
         start = """
         int funct_group{group}_{id}()
         {{
-            side_effect = side_effect + 1;
+            volatile static std::uint32_t inner_side_effect = 0;
+            inner_side_effect = inner_side_effect + 1;
         """.format(id=instance, group=group_id)
 
         if is_terminal:
@@ -256,7 +258,8 @@ class gen_function:
         start = """
         tl::expected<int, my_error_t> funct_group{group}_{id}()
         {{
-            side_effect = side_effect + 1;
+            volatile static std::uint32_t inner_side_effect = 0;
+            inner_side_effect = inner_side_effect + 1;
         """.format(id=instance, group=group_id)
 
         if is_terminal:
@@ -268,7 +271,7 @@ class gen_function:
                 """
         else:
             start = """
-            tl::unexpected<int, my_error_t> funct_group{group}_{id}(); \n
+            tl::expected<int, my_error_t> funct_group{group}_{id}(); \n
             """.format(
                 group=group_id, id=instance + 1) + start
             next_function_call = """
@@ -314,9 +317,9 @@ class gen_function_group:
 
     def result_call_start(self, group_id: int):
         return """
-        if (auto result = funct_group{group}_0(); !result) {
+        if (auto result = funct_group{group}_0(); !result) {{
             return tl::unexpected(result.error());
-        }
+        }}
         """.format(group=group_id)
 
     def generate_except(self, group_id: int):
@@ -456,7 +459,7 @@ class gen_result_application:
         volatile int return_code = 0;
         auto result = start();
         if (!result) {
-            return_code = result.data[0];
+            return_code = result.error().data[0];
         } else {
             return_code = result.value();
         }
@@ -494,6 +497,7 @@ class gen_result_application:
     def generate(self):
         global _UNIVERSAL_START
         error_type = """
+        #include <tl/expected.hpp>
         struct my_error_t
         {{
             std::array<std::uint8_t, {size}> data;
@@ -536,11 +540,11 @@ def demo_source_generation():
                                      classes=[class_a, class_b, class_c]).generate_except()
 
 
-def generate_random_app(rng: random.Random):
-    number_of_classes = rng.randint(1, 10)
+def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
+    number_of_classes = rng.randint(1, 100)
     number_of_functions = rng.randint(1, 50)
     number_of_groups = rng.randint(1, 50)
-    error_type_size = rng.randint(4, 128)
+    error_type_size = rng.randint(4, error_size_upper_bounds)
 
     class_list = []
     class_usage_list = []
@@ -567,15 +571,19 @@ def generate_random_app(rng: random.Random):
     return (error_type_size, group_list, class_list)
 
 
-def generate_suite(rng: random.Random, number_of_files: int = 10):
+def randomize_suite(rng: random.Random,
+                    number_of_files: int = 20,
+                    error_size_upper_bounds: int = 128):
     cmake_header = """
 cmake_minimum_required(VERSION 3.20)
 
 project(exception_v_result VERSION 0.0.1 LANGUAGES CXX)
 
+find_package(tl-expected REQUIRED)
+
 macro(new_exception_source name)
-    add_executable(${name} ${name}.cpp)
-    target_compile_options(${name} PRIVATE
+    add_executable(${name}.elf ${name}.cpp)
+    target_compile_options(${name}.elf PRIVATE
         -g
         -Wall
         -Wextra
@@ -588,9 +596,9 @@ macro(new_exception_source name)
         -mcpu=cortex-m4
         -fexceptions
     )
-    target_include_directories(${name} PUBLIC .)
-    target_compile_features(${name} PRIVATE cxx_std_20)
-    target_link_options(${name} PRIVATE
+    target_include_directories(${name}.elf PUBLIC .)
+    target_compile_features(${name}.elf PRIVATE cxx_std_20)
+    target_link_options(${name}.elf PRIVATE
         -Wl,--wrap=__cxa_allocate_exception
         -Wl,--wrap=__cxa_free_exception
         --specs=nosys.specs
@@ -606,13 +614,13 @@ macro(new_exception_source name)
         -L${CMAKE_SOURCE_DIR}/
         -T${CMAKE_SOURCE_DIR}/linker.ld
     )
-    libhal_post_build(${name})
-    libhal_disassemble(${name})
+    libhal_post_build(${name}.elf)
+    libhal_disassemble(${name}.elf)
 endmacro()
 
 macro(new_result_source name)
-    add_executable(${name} ${name}.cpp)
-    target_compile_options(${name} PRIVATE
+    add_executable(${name}.elf ${name}.cpp)
+    target_compile_options(${name}.elf PRIVATE
         -g
         -Wall
         -Wextra
@@ -625,9 +633,9 @@ macro(new_result_source name)
         -mcpu=cortex-m4
         -fno-exceptions
     )
-    target_include_directories(${name} PUBLIC .)
-    target_compile_features(${name} PRIVATE cxx_std_20)
-    target_link_options(${name} PRIVATE
+    target_include_directories(${name}.elf PUBLIC .)
+    target_compile_features(${name}.elf PRIVATE cxx_std_20)
+    target_link_options(${name}.elf PRIVATE
         --specs=nosys.specs
         --specs=picolibc.specs
         -mfloat-abi=hard
@@ -641,8 +649,9 @@ macro(new_result_source name)
         -L${CMAKE_SOURCE_DIR}/
         -T${CMAKE_SOURCE_DIR}/linker.ld
     )
-    libhal_post_build(${name})
-    libhal_disassemble(${name})
+    target_link_libraries(${name}.elf PRIVATE tl::expected)
+    libhal_post_build(${name}.elf)
+    libhal_disassemble(${name}.elf)
 endmacro()
 """
 
@@ -658,40 +667,52 @@ endmacro()
     cmake_sources = []
 
     for i in range(number_of_files):
-        app = generate_random_app(rng)
+        app = generate_random_app(
+            rng=rng, error_size_upper_bounds=error_size_upper_bounds)
         except_file_source = gen_exception_application(
             error_type_size=app[0],
             groups=app[1],
             classes=app[2]).generate()
         Path(f"test_suite/except_{i}.cpp").write_text(except_file_source)
         cmake_sources.append(f"new_exception_source(except_{i})")
-        # result_file_source = gen_result_application(*app).generate()
-        # Path(f"test_suite/result_{i}.cpp").write_text(except_file_source)
-        # cmake_source = f"new_result_source(test_suite/result_{i}.cpp)"
+
+        result_file_source = gen_result_application(*app).generate()
+        Path(f"test_suite/result_{i}.cpp").write_text(result_file_source)
+        cmake_sources.append(f"new_result_source(result_{i})")
 
     cmake_final = cmake_header + "\n".join(cmake_sources)
     Path("test_suite/CMakeLists.txt").write_text(cmake_final)
 
 
+def randomize(args):
+    rng = random.Random()
+    rng.seed(0)
+    print(f"sample_size = {args.sample_size}, bounds = {args.error_size}")
+    randomize_suite(rng=rng,
+                    number_of_files=args.sample_size,
+                    error_size_upper_bounds=args.error_size)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
-    generate_parser = subparsers.add_parser('generate', help='a help')
-    generate_parser.add_argument("-d", "--depth",
-                                 help="The call depth before the error is triggered.",
-                                 default=10,
-                                 type=int)
-    generate_parser.add_argument("-f", "--functions",
-                                 help="The number of additional functions to generate and run through in the code including the depth. So with a depth of 5 and functions 10, the total functions in the code besides main is 15. If this value is less than depth then the number of functions is equal to the depth.",
-                                 default=15,
-                                 type=int)
-    generate_parser.add_argument("-r", "--randomize",
-                                 help="Max depth of functions",
-                                 default=False,
-                                 type=bool)
+    randomize_parser = subparsers.add_parser('randomize', help='a help')
+    randomize_parser.add_argument("-d", "--depth",
+                                  help="The call depth before the error is triggered.",
+                                  default=10,
+                                  type=int)
+    randomize_parser.add_argument("-f", "--functions",
+                                  help="The number of additional functions to generate and run through in the code including the depth. So with a depth of 5 and functions 10, the total functions in the code besides main is 15. If this value is less than depth then the number of functions is equal to the depth.",
+                                  default=15,
+                                  type=int)
+    randomize_parser.add_argument("-s", "--sample_size",
+                                  help="Number of files to generate",
+                                  default=25,
+                                  type=int)
+    randomize_parser.add_argument("-e", "--error_size",
+                                  help="Size, in bytes, of the error object. In randomized test suites, this will be the upper bounds.",
+                                  default=128,
+                                  type=int)
+    randomize_parser.set_defaults(func=randomize)
     args = parser.parse_args()
-
-    rng = random.Random()
-    rng.seed(0)
-    generate_suite(rng)
-    # print(generate_random_source(rng=rng))
+    args.func(args)

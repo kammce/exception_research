@@ -15,9 +15,9 @@
  */
 
 __flash = 0x00000000;
-__flash_size = 512K;
+__flash_size = 10M;
 __ram = 0x10000000;
-__ram_size = 64K;
+__ram_size = 1M;
 __stack_size = 1K;
 
 INCLUDE "third_party/standard_arm.ld"

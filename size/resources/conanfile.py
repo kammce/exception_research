@@ -27,6 +27,9 @@ class application(ConanFile):
         self.tool_requires("libhal-cmake-util/2.1.1")
         self.tool_requires("arm-gnu-toolchain/12.2.1")
 
+    def requirements(self):
+        self.requires("tl-expected/20190710")
+
     def layout(self):
         cmake_layout(self)
 

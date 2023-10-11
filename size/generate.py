@@ -541,9 +541,9 @@ def demo_source_generation():
 
 
 def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
-    number_of_classes = rng.randint(1, 100)
-    number_of_functions = rng.randint(1, 50)
-    number_of_groups = rng.randint(1, 50)
+    number_of_classes = rng.randint(1, 50)
+    number_of_functions = rng.randint(1, 25)
+    number_of_groups = rng.randint(1, 25)
     error_type_size = rng.randint(4, error_size_upper_bounds)
 
     class_list = []
@@ -553,7 +553,7 @@ def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
 
     for i in range(number_of_classes):
         has_dtor = rng.randint(0, 1)
-        class_list.append(gen_class(id=i, has_dtor=bool(has_dtor)))
+        class_list.append(gen_class(id=i, has_dtor=bool(False)))
 
     for i in range(number_of_classes):
         usages = rng.randint(0, 5)

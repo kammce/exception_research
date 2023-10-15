@@ -545,7 +545,7 @@ def demo_source_generation():
 
 
 def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
-    number_of_classes = rng.randint(1, 50)
+    number_of_classes = rng.randint(1, 3)
     number_of_functions = rng.randint(1, 25)
     number_of_groups = rng.randint(1, 25)
     error_type_size = rng.randint(4, error_size_upper_bounds)

@@ -387,6 +387,10 @@ class gen_exception_application:
     {
         storage_left = std::span<std::uint8_t>(storage);
     }
+    void __wrap___cxa_call_unexpected(void*) // NOLINT
+    {
+        std::terminate();
+    }
     }
     int start();
     int main()
@@ -553,7 +557,7 @@ def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
 
     for i in range(number_of_classes):
         has_dtor = rng.randint(0, 1)
-        class_list.append(gen_class(id=i, has_dtor=bool(False)))
+        class_list.append(gen_class(id=i, has_dtor=bool(has_dtor)))
 
     for i in range(number_of_classes):
         usages = rng.randint(0, 5)
@@ -561,9 +565,9 @@ def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
 
     for i in range(number_of_functions):
         sample_size = rng.randint(0, number_of_classes)
-        position = rng.choice(list(call_position))
+        # position = rng.choice(list(call_position))
         function_list.append(gen_function(usages=rng.sample(
-            class_usage_list, sample_size), position=position))
+            class_usage_list, sample_size), position=call_position.BOTTOM))
 
     for i in range(number_of_groups):
         group_list.append(gen_function_group(function_list))
@@ -601,6 +605,7 @@ macro(new_exception_source name)
     target_link_options(${name}.elf PRIVATE
         -Wl,--wrap=__cxa_allocate_exception
         -Wl,--wrap=__cxa_free_exception
+        -Wl,--wrap=__cxa_call_unexpected
         --specs=nosys.specs
         --specs=picolibc.specs
         -mfloat-abi=hard

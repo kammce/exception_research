@@ -3,6 +3,118 @@
 Exists to test exceptions and result types and compare their impact on ROM and
 RAM as well as Happy/Sad path performance.
 
+## Assumptions about software in general
+
+### 1. **Error handlers are rare in code.**
+
+Most of the code written in an application is dedicated to performing work.
+It is not dedicated to handling errors.
+
+It would be very rare to find a code base that is composed of mostly (above 50%)
+error handling code over productive code.
+
+### 2. **Most errors require context to be handled**
+
+In general, the only way to properly handle an error is to understand exactly
+how and why the error was generated and also understands that there is a way to
+recover from that error in software, and this requires context.
+
+**Extreme example:** You have a function called `int sum(int a, int b)`. It can
+detect overflows. This function could emit the information in some way,
+exceptions or result return types, or it can terminate the application.
+Termination seems like it should ALWAYS be the wrong choice because:
+
+1. This function is making an assumption that the application can tolerate
+   terminate being called as a result of this function.
+2. Raising the risk of calling this function with invalid inputs, requiring the
+   developer to add additional checks before calling the function, or wrapping
+   the function to detect potential overflows and emitting an error, before
+   calling this function. This defeats the purpose of the original function.
+
+Typically, what the developer wants is to be allow to choose to ignore or
+handle this error rather than letting the library make critical decision about
+the application.
+
+### 3. **Error information tends to be more meaningful at higher stack frame.**
+
+The higher the call frame, the more context about the program is known. The
+highest call frame of an application is `main()`. Developers writing their
+`main()` function have full understanding of what they set out to do in their
+application, thus main has the MOST context regarding what to do when
+errors occur and how to handle them.
+
+`main()` could be too high up the stack in cases where main runs the real
+application function or it simply spawns a bunch of threads. In which case,
+the application function or the threads would be the functions with the most
+context about the execution of the function and would be the best places to
+handle errors.
+
+It may not always be the highest stack, but some starting stack frame has the
+most context regarding handling errors for its call stack.
+
+### 4. **Errors are exceptional situations**
+
+An 64-bit integer overflow, when dealing with real numbers, is a very
+exceptional case. Out of bounds access are exceptional, if not simply a
+bug in the program. Speaking to a sensor over I2C should almost always work
+after the first time communication is established.
+
+## Costs
+
+All tested on a Cortex M4 MCU (lpc4078), using ARM GNU GCC 12.2.1.
+
+### 💾 Storage Costs
+
+- Exceptions:
+  - Enabling exceptions: 5005 bytes
+  - catch block: TBD
+  - catching a new type: TBD
+  - throwing a type: TBD
+  - throwing a new type: TBD
+- `Result<T,E>`:
+  - Enabling/using std::expected: TBD
+  - Handling an expected value: TBD (should be 0 bytes)
+  - Returning std::unexpected: TDB
+  - Checking & returning an unexpected value up a level: TBD
+  - Returning a new error object
+
+### ⏱️ Time Costs
+
+All tests are conducted with call depths of 1, 2, 4, 8, 10, 16, 32, 50, 64,
+and 100. Results will be in the number of CPU cycles, NOT in time as time can
+be relative to the CPU operating frequency. With cycles, the amount of time
+between an error being emitted and handled by dividing the number of cycles
+by the CPU operating frequency.
+
+NOTE: the size of an exception object does not affect the speed in which an
+exception is thrown beyond constructing the object. The size of the object does
+matter to std::expected. The inheritance hierarchy of an error object returned
+using std::unexpected does not affect the speed of returning the object, but
+this can greatly affect the speed in which a catch statement can be found.
+
+- Exceptions:
+  - Throwing T, catching T, where T is a trivially destructible object
+  - Throwing T, catching T*, where T is a trivially destructible object
+  - Throwing V, catching I, where I is an interface and V implements I
+  - Throwing W, catching E, where E is some base type of W but W has more than
+    2 bases (should be the slowest).
+- Result:
+  - std::unexpected(T) where sizeof(T) == 4 bytes
+  - std::unexpected(U) where sizeof(U) > 65 bytes (calls memcpy)
+  - std::unexpected(W) where sizeof(W) == 8 bytes
+  - std::unexpected(V) where V is a `std::unique_ptr<I>`, where I is an
+    interface V implements I.
+
+### 🧠 Memory Costs (RAM)
+
+- Exceptions:
+  - Amount of allocated memory (statically or dynamically) when throwing an
+    exception.
+  - Amount of .data/.bss memory taken up
+  - Stack required to run libunwind routines after throw (use stack watermark).
+- Result:
+  - Amount of additional stack memory used to support result types
+
 ## ⚖️ Factors that contribute to code size
 
 ### Error transport mechanism
@@ -16,7 +128,7 @@ the unwinding mechanism is a fixed cost. As a project gets larger, the
 percentage of the mechanism relative to the overall project gets smaller.
 
 We've been capable of getting the total cost of the error transport mechanism,
-in GCC, down to 5005 bytes.
+in Arm Gnu GCC 12.2.1, down to 5005 bytes.
 
 #### ❌ `Result<T,E>`
 
@@ -46,7 +158,7 @@ alternative.
 
 #### ❓ Caveats
 
-If the device you are working with has very little flash, below 16kB, then
+If the device you are working with has flash below 32kB, then
 result return types can be a decent alternative. Although, in such situations
 where error handling will be sparse, it may also be a good idea to simply save
 error information to a region of RAM that will persist and terminate/reset the
@@ -56,8 +168,9 @@ controller.
 
 #### ❌ Exceptions
 
-Each thrown type gets its own type info object created. The type info contains a
-string of their type name which is inaccessible to programs with programs using
+Each thrown type gets its own type info object created. Along with the
+`<typeinfo name for X>`, where `X` is the name of the string literal mangled
+name of the type. This string information is inaccessible to programs using
 `-fno-rtti`. Each type info object occupy's a place in the `.rodata` region of
 the binary. The address of that type info object is compared to the address of
 the type info object in the catch statement. Note that the name of the type is
@@ -66,7 +179,7 @@ the larger that type info is. This cost is only paid once, so the same object
 can be thrown multiple times without generating additional type info objects.
 
 **How to fix this for exceptions?** Patch GCC to add support for
-`-fno-exception-type-names`, which would strip out type info type names when
+`-fstrip-typeinfo-name`, which would strip out type info type names when
 `-fno-rtti` and `-fexceptions` are both being used. This way, we save a bit more
 memory when using exceptions and no longer have to be concerned with the length
 and number of exceptions through. IMHO a 32-bit word for each thrown value is a
@@ -175,7 +288,7 @@ handling a routine with result types is smaller.
 
 [INCOMPLETE]
 
-#### 🟡 Exceptions when they work well
+#### ✅ Exceptions when they work well
 
 Additional information:
 exceptions work in two phases in GCC, the search phase and unwind phase.
@@ -190,15 +303,21 @@ of functions with non-trivial destructors with possible throwing behavior is
 organized in a sorted list of functions based on their addresses. Given the
 current
 
+#### ❌ Exceptions when they work poorly
+
 #### 🟡 `Result<T,E>`
+
+TBD
 
 ## 🏎️ Factors that contribute to happy path performance
 
 ## Limitations
 
+TBD
+
 ## Benefits of
 
-
+TBD
 
 ## :busts_in_silhouette: Contributing
 

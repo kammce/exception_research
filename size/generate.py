@@ -21,6 +21,7 @@ import random
 import os
 from pathlib import Path
 import shutil
+import subprocess
 
 
 """
@@ -42,9 +43,9 @@ _UNIVERSAL_START = """
 
 
 class gen_class:
-    def __init__(self, id: int, has_dtor: bool = True):
+    def __init__(self, id: int, nontrivial_dtor: bool = True):
         self._id = id
-        self.has_dtor = has_dtor
+        self.nontrivial_dtor = nontrivial_dtor
 
     @property
     def id(self):
@@ -70,7 +71,7 @@ class gen_class:
         class_{id}& operator=(class_{id}&&) noexcept = default;
         """.format(id=self._id)
 
-        if self.has_dtor:
+        if self.nontrivial_dtor:
             dtor = """~class_{id}()
             {{
                 side_effect = side_effect & ~(1 << m_channel);
@@ -120,7 +121,7 @@ class gen_class:
         class_{id}& operator=(class_{id}&&) noexcept = default;
         """.format(id=self._id)
 
-        if self.has_dtor:
+        if self.nontrivial_dtor:
             dtor = """~class_{id}()
             {{
                 side_effect = side_effect & ~(1 << m_channel);
@@ -228,8 +229,9 @@ class gen_function:
         else:
             start = 'int funct_group{group}_{id}(); \n'.format(
                 group=group_id, id=instance + 1) + start
-            next_function_call = "funct_group{group}_{id}();".format(
-                group=group_id, id=instance + 1)
+            next_function_call = \
+                "side_effect = side_effect - funct_group{group}_{id}();".format(
+                    group=group_id, id=instance + 1)
 
         if self.position == call_position.TOP:
             start = start + next_function_call
@@ -277,6 +279,8 @@ class gen_function:
             next_function_call = """
                 if(auto result = funct_group{group}_{id}(); !result) {{
                     return tl::unexpected(result.error());
+                }} else {{
+                    side_effect = side_effect - result.value();
                 }}""".format(
                 group=group_id, id=instance + 1)
 
@@ -544,7 +548,8 @@ def demo_source_generation():
                                      classes=[class_a, class_b, class_c]).generate_except()
 
 
-def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
+def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128,
+                        nontrivial_dtor: bool = False):
     number_of_classes = rng.randint(1, 3)
     number_of_functions = rng.randint(1, 25)
     number_of_groups = rng.randint(1, 25)
@@ -556,8 +561,7 @@ def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
     group_list = []
 
     for i in range(number_of_classes):
-        has_dtor = rng.randint(0, 1)
-        class_list.append(gen_class(id=i, has_dtor=bool(has_dtor)))
+        class_list.append(gen_class(id=i, nontrivial_dtor=nontrivial_dtor))
 
     for i in range(number_of_classes):
         usages = rng.randint(0, 5)
@@ -577,11 +581,12 @@ def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128):
 
 def randomize_suite(rng: random.Random,
                     number_of_files: int = 20,
-                    error_size_upper_bounds: int = 128):
+                    error_size_upper_bounds: int = 128,
+                    nontrivial_dtor: bool = False):
     cmake_header = """
 cmake_minimum_required(VERSION 3.20)
 
-project(exception_v_result VERSION 0.0.1 LANGUAGES CXX)
+project(exception_v_result LANGUAGES CXX)
 
 find_package(tl-expected REQUIRED)
 
@@ -673,7 +678,8 @@ endmacro()
 
     for i in range(number_of_files):
         app = generate_random_app(
-            rng=rng, error_size_upper_bounds=error_size_upper_bounds)
+            rng=rng, error_size_upper_bounds=error_size_upper_bounds,
+            nontrivial_dtor=nontrivial_dtor)
         except_file_source = gen_exception_application(
             error_type_size=app[0],
             groups=app[1],
@@ -695,7 +701,8 @@ def randomize(args):
     print(f"sample_size = {args.sample_size}, bounds = {args.error_size}")
     randomize_suite(rng=rng,
                     number_of_files=args.sample_size,
-                    error_size_upper_bounds=args.error_size)
+                    error_size_upper_bounds=args.error_size,
+                    nontrivial_dtor=args.nontrivial_dtor)
 
 
 if __name__ == "__main__":
@@ -718,6 +725,9 @@ if __name__ == "__main__":
                                   help="Size, in bytes, of the error object. In randomized test suites, this will be the upper bounds.",
                                   default=128,
                                   type=int)
+    randomize_parser.add_argument("-n", "--nontrivial_dtor",
+                                  help="Determine if classes will have a nontrivial destructor.",
+                                  action='store_true')
     randomize_parser.set_defaults(func=randomize)
     args = parser.parse_args()
     args.func(args)

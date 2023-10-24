@@ -14,13 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 from typing import List
 from enum import Enum
-import random
-import os
 from pathlib import Path
-import shutil
 
 
 _UNIVERSAL_START = """
@@ -32,7 +28,118 @@ _UNIVERSAL_START = """
     #include <span>
     #include <string_view>
 
-    volatile std::int32_t side_effect;
+    volatile std::int32_t side_effect = 0;
+    std::uint32_t start_cycles = 0;
+    std::uint32_t end_cycles = 0;
+
+    /// Structure type to access the Data Watch point and Trace Register (DWT).
+    struct dwt_register_t
+    {
+    /// Offset: 0x000 (R/W)  Control Register
+    volatile uint32_t ctrl;
+    /// Offset: 0x004 (R/W)  Cycle Count Register
+    volatile uint32_t cyccnt;
+    /// Offset: 0x008 (R/W)  CPI Count Register
+    volatile uint32_t cpicnt;
+    /// Offset: 0x00C (R/W)  Exception Overhead Count Register
+    volatile uint32_t exccnt;
+    /// Offset: 0x010 (R/W)  Sleep Count Register
+    volatile uint32_t sleepcnt;
+    /// Offset: 0x014 (R/W)  LSU Count Register
+    volatile uint32_t lsucnt;
+    /// Offset: 0x018 (R/W)  Folded-instruction Count Register
+    volatile uint32_t foldcnt;
+    /// Offset: 0x01C (R/ )  Program Counter Sample Register
+    volatile const uint32_t pcsr;
+    /// Offset: 0x020 (R/W)  Comparator Register 0
+    volatile uint32_t comp0;
+    /// Offset: 0x024 (R/W)  Mask Register 0
+    volatile uint32_t mask0;
+    /// Offset: 0x028 (R/W)  Function Register 0
+    volatile uint32_t function0;
+    /// Reserved 0
+    std::array<uint32_t, 1> reserved0;
+    /// Offset: 0x030 (R/W)  Comparator Register 1
+    volatile uint32_t comp1;
+    /// Offset: 0x034 (R/W)  Mask Register 1
+    volatile uint32_t mask1;
+    /// Offset: 0x038 (R/W)  Function Register 1
+    volatile uint32_t function1;
+    /// Reserved 1
+    std::array<uint32_t, 1> reserved1;
+    /// Offset: 0x040 (R/W)  Comparator Register 2
+    volatile uint32_t comp2;
+    /// Offset: 0x044 (R/W)  Mask Register 2
+    volatile uint32_t mask2;
+    /// Offset: 0x048 (R/W)  Function Register 2
+    volatile uint32_t function2;
+    /// Reserved 2
+    std::array<uint32_t, 1> reserved2;
+    /// Offset: 0x050 (R/W)  Comparator Register 3
+    volatile uint32_t comp3;
+    /// Offset: 0x054 (R/W)  Mask Register 3
+    volatile uint32_t mask3;
+    /// Offset: 0x058 (R/W)  Function Register 3
+    volatile uint32_t function3;
+    };
+
+    /// Structure type to access the Core Debug Register (CoreDebug)
+    struct core_debug_registers_t
+    {
+    /// Offset: 0x000 (R/W)  Debug Halting Control and Status Register
+    volatile uint32_t dhcsr;
+    /// Offset: 0x004 ( /W)  Debug Core Register Selector Register
+    volatile uint32_t dcrsr;
+    /// Offset: 0x008 (R/W)  Debug Core Register Data Register
+    volatile uint32_t dcrdr;
+    /// Offset: 0x00C (R/W)  Debug Exception and Monitor Control Register
+    volatile uint32_t demcr;
+    };
+
+    /// Address of the hardware DWT registers
+    constexpr intptr_t dwt_address = 0xE0001000UL;
+
+    /// Address of the Cortex M CoreDebug module
+    constexpr intptr_t core_debug_address = 0xE000EDF0UL;
+
+    // NOLINTNEXTLINE
+    auto* dwt = reinterpret_cast<dwt_register_t*>(dwt_address);
+
+    // NOLINTNEXTLINE
+    auto* core = reinterpret_cast<core_debug_registers_t*>(core_debug_address);
+
+    void
+    dwt_counter_enable()
+    {
+    /**
+    * @brief This bit must be set to 1 to enable use of the trace and debug
+    * blocks:
+    *
+    *   - Data Watchpoint and Trace (DWT)
+    *   - Instrumentation Trace Macrocell (ITM)
+    *   - Embedded Trace Macrocell (ETM)
+    *   - Trace Port Interface Unit (TPIU).
+    */
+    constexpr unsigned core_trace_enable = 1 << 24U;
+
+    /// Mask for turning on cycle counter.
+    constexpr unsigned enable_cycle_count = 1 << 0;
+
+    // Enable trace core
+    core->demcr = (core->demcr | core_trace_enable);
+
+    // Reset cycle count
+    dwt->cyccnt = 0;
+
+    // Start cycle count
+    dwt->ctrl = (dwt->ctrl | enable_cycle_count);
+    }
+
+    std::uint32_t
+    uptime()
+    {
+    return dwt->cyccnt;
+    }
     """
 
 
@@ -217,6 +324,7 @@ class gen_function:
             next_function_call = """
                 if (side_effect > 0)
                 {
+                    start_cycles = uptime();
                     throw my_error_t{ .data = { 0xDE, 0xAD } };
                 }
                 """
@@ -224,7 +332,7 @@ class gen_function:
             start = 'int funct_group{group}_{id}(); \n'.format(
                 group=group_id, id=instance + 1) + start
             next_function_call = \
-                "side_effect = side_effect - funct_group{group}_{id}();".format(
+                "side_effect = side_effect + funct_group{group}_{id}();".format(
                     group=group_id, id=instance + 1)
 
         if self.position == call_position.TOP:
@@ -274,7 +382,7 @@ class gen_function:
                 if(auto result = funct_group{group}_{id}(); !result) {{
                     return tl::unexpected(result.error());
                 }} else {{
-                    side_effect = side_effect - result.value();
+                    side_effect = side_effect + result.value();
                 }}""".format(
                 group=group_id, id=instance + 1)
 
@@ -310,6 +418,20 @@ class gen_function_group:
     def except_call_start(self, group_id: int):
         return "funct_group{group}_0();".format(group=group_id)
 
+    def except_call_start_with_time_check(self, group_id: int):
+        return """
+        try {{
+            start_cycles = uptime();
+            funct_group{group}_0();
+        }} catch ([[maybe_unused]] const my_error_t& p_error) {{
+            end_cycles = uptime();
+            cycle_map[{group}] = end_cycles - start_cycles;
+        }}
+        """.format(group=group_id)
+
+    def except_call_function_signature(self, group_id: int):
+        return "funct_group{group}_0".format(group=group_id)
+
     def result_forward_declare_start(self, group_id: int):
         return "tl::expected<int, my_error_t> funct_group{group}_0();".format(group=group_id)
 
@@ -317,6 +439,15 @@ class gen_function_group:
         return """
         if (auto result = funct_group{group}_0(); !result) {{
             return tl::unexpected(result.error());
+        }}
+        """.format(group=group_id)
+
+    def result_call_start_with_time_check(self, group_id: int):
+        return """
+        start_cycles = uptime();
+        if (auto result = funct_group{group}_0(); !result) {{
+            end_cycles = uptime();
+            cycle_map[{group}] = end_cycles - start_cycles;
         }}
         """.format(group=group_id)
 
@@ -335,7 +466,7 @@ class gen_function_group:
         return '\n'.join(list)
 
 
-class gen_exception_application:
+class gen_exception_performance_application:
     _EXCEPTION_START = """
     [[noreturn]] void terminate() noexcept
     {
@@ -393,77 +524,15 @@ class gen_exception_application:
     int start();
     int main()
     {
-    volatile int return_code = 0;
-    try {
-        return_code = start();
-    } catch (const my_error_t& p_error) {
-        return_code = p_error.data[0];
-    } catch (...) {
-        return_code = -1;
-    }
-    return return_code;
-    }
-    """
-
-    def __init__(self,
-                 error_type_size: int,
-                 groups: List[gen_function_group],
-                 classes: List[gen_class]):
-        self.error_type_size = error_type_size
-        self.groups = groups
-        self.classes = classes
-
-    def create_start(self):
-        start_template = """
-        {forward_delcaration}
-        int start() {{
-            {body}
-            return side_effect;
-        }}
-        """
-
-        forwards = []
-        calls = []
-
-        for index, group in enumerate(self.groups):
-            forwards.append(group.except_forward_declare_start(index))
-            calls.append(group.except_call_start(index))
-
-        return start_template.format(forward_delcaration="\n".join(forwards),
-                                     body="\n".join(calls))
-
-    def generate(self):
-        global _UNIVERSAL_START
-        error_type = """
-        struct my_error_t
-        {{
-            std::array<std::uint8_t, {size}> data;
-        }};
-        """.format(size=self.error_type_size)
-        source = [_UNIVERSAL_START, error_type, self._EXCEPTION_START]
-
-        source.append(self.create_start())
-
-        for classes in self.classes:
-            source.append(classes.generate_except())
-
-        for index, function_group in enumerate(self.groups):
-            source.append(function_group.generate_except(index))
-
-        return "\n".join(source)
-
-
-class gen_result_application:
-    _EXCEPTION_START = """
-    tl::expected<int, my_error_t> start();
-    int main()
-    {
+        dwt_counter_enable();
         volatile int return_code = 0;
-        auto result = start();
-        if (!result) {
-            return_code = result.error().data[0];
-        } else {
-            return_code = result.value();
+        try {
+            return_code = start();
+        } catch (...) {
+            return_code = -1;
+        }
+        while(true) {
+            continue;
         }
         return return_code;
     }
@@ -479,7 +548,97 @@ class gen_result_application:
 
     def create_start(self):
         start_template = """
-        {forward_delcaration}
+        {forward_declarations}
+
+        using signature = int(void);
+
+        std::array<signature*, {function_count}> functions = {{
+            {function_list}
+        }};
+        int start() {{
+            cycle_map.fill(0);
+            std::uint32_t index = 0;
+            for (auto& funct : functions) {{
+                try {{
+                    start_cycles = uptime();
+                    funct();
+                }} catch ([[maybe_unused]] const my_error_t& p_error) {{
+                    end_cycles = uptime();
+                    cycle_map[index++] = end_cycles - start_cycles;
+                }}
+            }}
+            return side_effect;
+        }}
+        """
+
+        forwards = []
+        calls = []
+
+        for index, group in enumerate(self.groups):
+            forwards.append(group.except_forward_declare_start(index))
+            calls.append(group.except_call_function_signature(index))
+
+        return start_template.format(forward_declarations="\n".join(forwards),
+                                     body="\n".join(calls),
+                                     function_count=len(calls),
+                                     function_list=",".join(calls))
+
+    def generate(self):
+        global _UNIVERSAL_START
+        error_type = """
+        struct my_error_t
+        {{
+            std::array<std::uint8_t, {size}> data;
+        }};
+        """.format(size=self.error_type_size)
+        cycle_map = """
+        std::array<std::uint64_t, {groups}> cycle_map{{}};
+        """.format(groups=len(self.groups))
+        source = [_UNIVERSAL_START, error_type,
+                  self._EXCEPTION_START, cycle_map]
+
+        source.append(self.create_start())
+
+        for classes in self.classes:
+            source.append(classes.generate_except())
+
+        for index, function_group in enumerate(self.groups):
+            source.append(function_group.generate_except(index))
+
+        return "\n".join(source)
+
+
+class gen_result_performance_application:
+    _EXCEPTION_START = """
+    tl::expected<int, my_error_t> start();
+    int main()
+    {
+        dwt_counter_enable();
+        volatile int return_code = 0;
+        auto result = start();
+        if (!result) {
+            return_code = result.error().data[0];
+        } else {
+            return_code = result.value();
+        }
+        while(true) {
+            continue;
+        }
+        return return_code;
+    }
+    """
+
+    def __init__(self,
+                 error_type_size: int,
+                 groups: List[gen_function_group],
+                 classes: List[gen_class]):
+        self.error_type_size = error_type_size
+        self.groups = groups
+        self.classes = classes
+
+    def create_start(self):
+        start_template = """
+        {forward_declarations}
         tl::expected<int, my_error_t> start() {{
             {body}
             return side_effect;
@@ -491,9 +650,9 @@ class gen_result_application:
 
         for index, group in enumerate(self.groups):
             forwards.append(group.result_forward_declare_start(index))
-            calls.append(group.result_call_start(index))
+            calls.append(group.result_call_start_with_time_check(index))
 
-        return start_template.format(forward_delcaration="\n".join(forwards),
+        return start_template.format(forward_declarations="\n".join(forwards),
                                      body="\n".join(calls))
 
     def generate(self):
@@ -505,7 +664,11 @@ class gen_result_application:
             std::array<std::uint8_t, {size}> data;
         }};
         """.format(size=self.error_type_size)
-        source = [_UNIVERSAL_START, error_type, self._EXCEPTION_START]
+        cycle_map = """
+        std::array<std::uint64_t, {groups}> cycle_map{{}};
+        """.format(groups=len(self.groups))
+        source = [_UNIVERSAL_START, error_type,
+                  self._EXCEPTION_START, cycle_map]
 
         source.append(self.create_start())
 
@@ -518,210 +681,52 @@ class gen_result_application:
         return "\n".join(source)
 
 
-def demo_source_generation():
-    class_a = gen_class()
-    class_b = gen_class()
-    class_c = gen_class(False)
+def generate_app():
+    trivial_class = gen_class(id=0, nontrivial_dtor=False)
+    nontrivial_class = gen_class(id=1, nontrivial_dtor=True)
 
-    usage1 = gen_class_usage(class_a, 2)
-    usage2 = gen_class_usage(class_b, 1)
-    usage3 = gen_class_usage(class_c, 3)
+    call_depth_list = [6, 12, 24, 48, 96]
+    dtor_percentage_in_stack = [0.00, 0.10, 0.25, 0.50, 1.00]
 
-    function0 = gen_function([usage1, usage3], call_position.MIDDLE)
-    function1 = gen_function([usage2, usage2, usage2], call_position.TOP)
-    function2 = gen_function(
-        [usage1, usage2, usage3, usage3], call_position.BOTTOM)
-    function3 = gen_function(
-        [usage2, usage2, usage2], call_position.BOTTOM)
-    group0 = gen_function_group([function0, function1])
-    group1 = gen_function_group(
-        [function0, function1, function2, function3])
-
-    return gen_exception_application(error_type_size=4,
-                                     groups=[group0, group0, group1, group1],
-                                     classes=[class_a, class_b, class_c]).generate_except()
-
-
-def generate_random_app(rng: random.Random, error_size_upper_bounds: int = 128,
-                        nontrivial_dtor: bool = False):
-    number_of_classes = rng.randint(1, 3)
-    number_of_functions = rng.randint(1, 25)
-    number_of_groups = rng.randint(1, 25)
-    error_type_size = rng.randint(4, error_size_upper_bounds)
-
-    class_list = []
-    class_usage_list = []
-    function_list = []
     group_list = []
+    group_index = 0
 
-    for i in range(number_of_classes):
-        class_list.append(gen_class(id=i, nontrivial_dtor=nontrivial_dtor))
+    print("group_index,depth,ratio")
 
-    for i in range(number_of_classes):
-        usages = rng.randint(0, 5)
-        class_usage_list.append(gen_class_usage(class_list[i], usages))
+    for dtor_ratio in dtor_percentage_in_stack:
+        for call_depth in call_depth_list:
+            function_list = []
+            for function_index in range(call_depth):
+                function_index = function_index + 1
+                use_nontrivial_dtor = (
+                    (dtor_ratio * function_index).is_integer() and
+                    dtor_ratio != 0.0)
 
-    for i in range(number_of_functions):
-        sample_size = rng.randint(0, number_of_classes)
-        # position = rng.choice(list(call_position))
-        function_list.append(gen_function(usages=rng.sample(
-            class_usage_list, sample_size), position=call_position.BOTTOM))
+                if use_nontrivial_dtor:
+                    class_usage_list = [gen_class_usage(nontrivial_class, 1)]
+                else:
+                    class_usage_list = [gen_class_usage(trivial_class, 1)]
 
-    for i in range(number_of_groups):
-        group_list.append(gen_function_group(function_list))
+                function_list.append(gen_function(
+                    usages=class_usage_list, position=call_position.BOTTOM))
+            print("{},{},{}".format(group_index, call_depth, dtor_ratio))
+            group_list.append(gen_function_group(function_list))
+            group_index = group_index + 1
 
-    return (error_type_size, group_list, class_list)
-
-
-def randomize_suite(rng: random.Random,
-                    number_of_files: int = 20,
-                    error_size_upper_bounds: int = 128,
-                    nontrivial_dtor: bool = False):
-    cmake_header = """
-cmake_minimum_required(VERSION 3.20)
-
-project(exception_v_result LANGUAGES CXX)
-
-find_package(tl-expected REQUIRED)
-
-macro(new_exception_source name)
-    add_executable(${name}.elf ${name}.cpp)
-    target_compile_options(${name}.elf PRIVATE
-        -g
-        -Wall
-        -Wextra
-        -Wpedantic
-        -fno-rtti
-        -mthumb
-        -ffunction-sections
-        -fdata-sections
-        -mfloat-abi=hard
-        -mcpu=cortex-m4
-        -fexceptions
-    )
-    target_include_directories(${name}.elf PUBLIC .)
-    target_compile_features(${name}.elf PRIVATE cxx_std_20)
-    target_link_options(${name}.elf PRIVATE
-        -Wl,--wrap=__cxa_allocate_exception
-        -Wl,--wrap=__cxa_free_exception
-        -Wl,--wrap=__cxa_call_unexpected
-        --specs=nosys.specs
-        --specs=picolibc.specs
-        -mfloat-abi=hard
-        -mcpu=cortex-m4
-        -mfpu=auto
-        -fno-rtti
-        -mthumb
-        -ffunction-sections
-        -fdata-sections
-        -fexceptions
-        -L${CMAKE_SOURCE_DIR}/
-        -T${CMAKE_SOURCE_DIR}/linker.ld
-    )
-    libhal_post_build(${name}.elf)
-    libhal_disassemble(${name}.elf)
-endmacro()
-
-macro(new_result_source name)
-    add_executable(${name}.elf ${name}.cpp)
-    target_compile_options(${name}.elf PRIVATE
-        -g
-        -Wall
-        -Wextra
-        -Wpedantic
-        -fno-rtti
-        -mthumb
-        -ffunction-sections
-        -fdata-sections
-        -mfloat-abi=hard
-        -mcpu=cortex-m4
-        -fno-exceptions
-    )
-    target_include_directories(${name}.elf PUBLIC .)
-    target_compile_features(${name}.elf PRIVATE cxx_std_20)
-    target_link_options(${name}.elf PRIVATE
-        --specs=nosys.specs
-        --specs=picolibc.specs
-        -mfloat-abi=hard
-        -mcpu=cortex-m4
-        -mfpu=auto
-        -fno-rtti
-        -mthumb
-        -ffunction-sections
-        -fdata-sections
-        -fno-exceptions
-        -L${CMAKE_SOURCE_DIR}/
-        -T${CMAKE_SOURCE_DIR}/linker.ld
-    )
-    target_link_libraries(${name}.elf PRIVATE tl::expected)
-    libhal_post_build(${name}.elf)
-    libhal_disassemble(${name}.elf)
-endmacro()
-"""
-
-    os.mkdir("test_suite/")
-    os.mkdir("test_suite/third_party/")
-
-    shutil.copy("resources/linker.ld", "test_suite/")
-    shutil.copy("resources/conanfile.py", "test_suite/")
-    shutil.copy("resources/baremetal.profile", "test_suite/")
-    shutil.copy("resources/third_party/standard_arm.ld",
-                "test_suite/third_party/")
-
-    cmake_sources = []
-
-    for i in range(number_of_files):
-        app = generate_random_app(
-            rng=rng, error_size_upper_bounds=error_size_upper_bounds,
-            nontrivial_dtor=nontrivial_dtor)
-        except_file_source = gen_exception_application(
-            error_type_size=app[0],
-            groups=app[1],
-            classes=app[2]).generate()
-        Path(f"test_suite/except_{i}.cpp").write_text(except_file_source)
-        cmake_sources.append(f"new_exception_source(except_{i})")
-
-        result_file_source = gen_result_application(*app).generate()
-        Path(f"test_suite/result_{i}.cpp").write_text(result_file_source)
-        cmake_sources.append(f"new_result_source(result_{i})")
-
-    cmake_final = cmake_header + "\n".join(cmake_sources)
-    Path("test_suite/CMakeLists.txt").write_text(cmake_final)
+    return (group_list, [trivial_class, nontrivial_class])
 
 
-def randomize(args):
-    rng = random.Random()
-    rng.seed(0)
-    print(f"sample_size = {args.sample_size}, bounds = {args.error_size}")
-    randomize_suite(rng=rng,
-                    number_of_files=args.sample_size,
-                    error_size_upper_bounds=args.error_size,
-                    nontrivial_dtor=args.nontrivial_dtor)
+def generate():
+    app = generate_app()
+    except_source = gen_exception_performance_application(error_type_size=4,
+                                                          groups=app[0],
+                                                          classes=app[1]).generate()
+    Path(f"except.cpp").write_text(except_source)
+    result_file_source = gen_result_performance_application(error_type_size=4,
+                                                            groups=app[0],
+                                                            classes=app[1]).generate()
+    Path(f"result.cpp").write_text(result_file_source)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers()
-    randomize_parser = subparsers.add_parser('randomize', help='a help')
-    randomize_parser.add_argument("-d", "--depth",
-                                  help="The call depth before the error is triggered.",
-                                  default=10,
-                                  type=int)
-    randomize_parser.add_argument("-f", "--functions",
-                                  help="The number of additional functions to generate and run through in the code including the depth. So with a depth of 5 and functions 10, the total functions in the code besides main is 15. If this value is less than depth then the number of functions is equal to the depth.",
-                                  default=15,
-                                  type=int)
-    randomize_parser.add_argument("-s", "--sample_size",
-                                  help="Number of files to generate",
-                                  default=25,
-                                  type=int)
-    randomize_parser.add_argument("-e", "--error_size",
-                                  help="Size, in bytes, of the error object. In randomized test suites, this will be the upper bounds.",
-                                  default=128,
-                                  type=int)
-    randomize_parser.add_argument("-n", "--nontrivial_dtor",
-                                  help="Determine if classes will have a nontrivial destructor.",
-                                  action='store_true')
-    randomize_parser.set_defaults(func=randomize)
-    args = parser.parse_args()
-    args.func(args)
+    generate()

@@ -1,2 +1,4 @@
 **/test_suite/*
 .DS_Store
+**/build/*
+CMakeUserPresets.json

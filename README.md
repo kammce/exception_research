@@ -3,6 +3,71 @@
 Exists to test exceptions and result types and compare their impact on ROM and
 RAM as well as Happy/Sad path performance.
 
+## How to run Performance benchmarks
+
+To generate the code & compile it:
+
+```bash
+python3 generate.py > info.csv
+conan build . -pr baremetal.profile
+```
+
+The info.csv has information about each group ID and what its call depth is
+and its percentage of functions with clean up routines.
+
+Open a new terminal and run the following, replace the `target` with your own:
+
+```bash
+pyocd gdbserver --target=lpc4088 --persist
+```
+
+You'll need a JTAG or SWD debug probe connected to your host machine as well as
+have that debug probe connected to your target device.
+
+In the same terminal you compiled the code run:
+
+```bash
+source build/MinSizeRel/generators/conanbuild.sh
+```
+
+This will add the tools downloaded by conan to the path of your terminal, which
+will give you access to `arm-none-eabi-gdb`.
+
+Run this command to start GDB and begin debugging:
+
+```bash
+arm-none-eabi-gdb build/MinSizeRel/except.elf -ex "target remote :3333" -ex "set mem inaccessible-by-default off"
+```
+
+From here run the following gdb commands:
+
+```gdb
+load
+b main
+continue
+```
+
+- `load`: loads the elf file into the device
+- `b main`: sets a breakpoint at main
+- `continue`: runs the code until it reaches main (start and run are not used)
+
+Put a break point at the line number where the `while(true) { continue; }` is
+and enter `continue`. When the program stops inspect the `cycles_map` function.
+
+```gdb
+print cycles_map
+```
+
+The cycles map has the number of cycles required to throw an exception and catch
+it. Save this to a file and replace all `, ` (comma with a space) with a new
+line character. Import the CSV into a spreadsheet program and copy and paste the
+vertical list into the last column of the spreadsheet. And now you have
+performance data.
+
+## How to run Size benchmarks
+
+Haven't written this yet.
+
 ## Assumptions about software in general
 
 ### 1. **Error handlers are rare in code.**

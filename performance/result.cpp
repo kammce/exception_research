@@ -128,6 +128,13 @@
         };
         
 
+    [[noreturn]] void
+    halt()
+    {
+        while (true) {
+            continue;
+        }
+    }
     tl::expected<int, my_error_t> start();
     int main()
     {
@@ -139,9 +146,7 @@
         } else {
             return_code = result.value();
         }
-        while(true) {
-            continue;
-        }
+        halt();
         return return_code;
     }
     

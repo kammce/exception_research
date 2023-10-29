@@ -152,6 +152,10 @@ class gen_class:
     def id(self):
         return self._id
 
+    @property
+    def is_nontrivial(self):
+        return self.nontrivial_dtor
+
     def generate_except(self):
         start = "class class_{id} {{ public:".format(id=self._id)
         ctor = """
@@ -267,6 +271,10 @@ class gen_class_usage:
         self.m_class = p_class
         self.m_trigger_count = p_trigger_count
 
+    @property
+    def is_nontrivial(self):
+        return self.m_class.is_nontrivial
+
     def generate_except(self, p_instance: int):
         return 'class_{id} instance_{instance}(side_effect);\n'.format(
             id=self.m_class.id,
@@ -313,12 +321,18 @@ class gen_function:
                         instance: int,
                         group_id: int,
                         is_terminal: bool = False):
+        section_marker = ""
+
+        for usage in self.usages:
+            if not usage.is_nontrivial:
+                section_marker = '[[gnu::section(".trivial_handle")]]'
+
         start = """
-        int funct_group{group}_{id}()
+        {section_marker} int funct_group{group}_{id}()
         {{
             volatile static std::uint32_t inner_side_effect = 0;
             inner_side_effect = inner_side_effect + 1;
-        """.format(id=instance, group=group_id)
+        """.format(section_marker=section_marker, id=instance, group=group_id)
 
         if is_terminal:
             next_function_call = """
@@ -520,8 +534,77 @@ class gen_exception_performance_application:
     {
         std::terminate();
     }
+
+    using _uw = std::uint32_t;
+
+    typedef struct __EIT_entry
+    {
+        _uw fnoffset;
+        _uw content;
+    } __EIT_entry;
+
+    static inline _uw selfrel_offset31(const _uw* p)
+    {
+        _uw offset;
+
+        offset = *p;
+        /* Sign extend to 32 bits.  */
+        if (offset & (1 << 30))
+        offset |= 1u << 31;
+        else
+        offset &= ~(1u << 31);
+
+        return offset + (_uw)p;
+    }
+
+    extern std::uint32_t __trivial_handle_start;
+    extern std::uint32_t __trivial_handle_end;
+
+    // NOLINTNEXTLINE
+    const void* search_EIT_table(const __EIT_entry* table,
+                                int nrec, // NOLINT
+                                _uw return_address)
+    {
+        _uw next_fn;
+        _uw this_fn;
+        int n, left, right;
+
+        std::uint32_t* start = &__trivial_handle_start;
+        std::uint32_t* end = &__trivial_handle_end;
+        std::uint32_t* check = reinterpret_cast<std::uint32_t*>(return_address);
+        bool is_trivial_function = (start <= check && check <= end);
+
+        if (is_trivial_function) {
+            return nullptr;
+        }
+
+        if (nrec == 0)
+        return nullptr;
+
+        left = 0;
+        right = nrec - 1;
+
+        while (true) {
+        n = (left + right) / 2;
+        this_fn = selfrel_offset31(&table[n].fnoffset);
+        if (n != nrec - 1)
+            next_fn = selfrel_offset31(&table[n + 1].fnoffset) - 1;
+        else
+            next_fn = (_uw)0 - 1;
+
+        if (return_address < this_fn) {
+            if (n == left)
+            return nullptr;
+            right = n - 1;
+        } else if (return_address <= next_fn)
+            return &table[n];
+        else
+            left = n + 1;
+        }
+    }
     }
     int start();
+
     int main()
     {
         dwt_counter_enable();
@@ -531,9 +614,7 @@ class gen_exception_performance_application:
         } catch (...) {
             return_code = -1;
         }
-        while(true) {
-            continue;
-        }
+        std::terminate();
         return return_code;
     }
     """
@@ -610,6 +691,13 @@ class gen_exception_performance_application:
 
 class gen_result_performance_application:
     _EXCEPTION_START = """
+    [[noreturn]] void
+    halt()
+    {
+        while (true) {
+            continue;
+        }
+    }
     tl::expected<int, my_error_t> start();
     int main()
     {
@@ -621,9 +709,7 @@ class gen_result_performance_application:
         } else {
             return_code = result.value();
         }
-        while(true) {
-            continue;
-        }
+        halt();
         return return_code;
     }
     """

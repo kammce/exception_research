@@ -26,6 +26,7 @@ macro(new_exception_source name)
     -Wl,--wrap=__cxa_allocate_exception
     -Wl,--wrap=__cxa_free_exception
     -Wl,--wrap=__cxa_call_unexpected
+    -Wl,--wrap=search_EIT_table
     --specs=nosys.specs
     --specs=picolibc.specs
     -mfloat-abi=hard

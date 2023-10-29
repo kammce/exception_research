@@ -112,6 +112,13 @@ SECTIONS
     PROVIDE_HIDDEN ( __fini_array_end = . );
   } >flash AT>flash :text
 
+  .trivial_handle : {
+    PROVIDE(__trivial_handle_start = .);
+    *(.trivial_handle)
+    . = ALIGN(8);
+    PROVIDE(__trivial_handle_end = .);
+  }  >flash AT>flash :text
+
   /* additional sections when compiling with C++ exception support */
 
   .except : {

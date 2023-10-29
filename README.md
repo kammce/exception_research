@@ -376,13 +376,24 @@ TBD
 
 ## 🏎️ Factors that contribute to happy path performance
 
-## Limitations
+### Limitations
 
 TBD
 
-## Benefits of
+### Benefits of
 
 TBD
+
+## Tricks of the trade
+
+### Weakening symbols so they can be overridden
+
+```bash
+arm-none-eabi-objcopy \
+/Users/kammce/.conan2/p/b/arm-g788a41ed25167/p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a \
+--globalize-symbol=search_EIT_table --weaken-symbol=search_EIT_table \
+/Users/kammce/.conan2/p/b/arm-g788a41ed25167/p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a
+```
 
 ## :busts_in_silhouette: Contributing
 

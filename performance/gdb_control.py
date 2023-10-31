@@ -4,7 +4,7 @@ from rich.progress import track
 import sys
 
 gdbmi = GdbController(command=[
-    '/Users/kammce/.conan2/p/b/arm-g788a41ed25167/p/bin/bin/arm-none-eabi-gdb',
+    '/Users/kammce/.conan2/p/b/arm-g724ef3e080948/p/bin/bin/arm-none-eabi-gdb',
     'build/MinSizeRel/except.elf',
     '--interpreter=mi'
 ], time_to_check_for_additional_output_sec=0.005)
@@ -21,7 +21,7 @@ gdbmi.write('b __cxa_throw', read_response=False)
 my_stderr.log('Running to first call of "__cxa_throw" ...')
 gdbmi.write('continue', read_response=False)
 
-total_steps = 70000
+total_steps = 100000
 
 my_stderr.log(f'Recording {total_steps} total instruction steps...')
 my_stdout.out("step,function,address")
@@ -32,12 +32,11 @@ for step in track(range(total_steps),
     for message in response:
         payload = message['payload']
         if payload and isinstance(payload, dict) and 'frame' in payload:
-            if payload['frame']['func'] == "start":
-                # Continue from here in order to reach the next call to throw
-                gdbmi.write('continue', read_response=False)
-                continue
             my_stdout.out("{},{},{}".format(
                 step,
                 payload['frame']['func'],
                 payload['frame']['addr']
             ))
+            if payload['frame']['func'] == "start":
+                # Continue from here in order to reach the next call to throw
+                gdbmi.write('continue', read_response=False)

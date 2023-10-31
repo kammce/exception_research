@@ -1,11 +1,16 @@
 
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <limits>
 #include <span>
 #include <string_view>
+
+#include <unwind.h>
 
 volatile std::int32_t side_effect = 0;
 std::uint32_t start_cycles = 0;
@@ -179,15 +184,13 @@ extern "C"
     std::terminate();
   }
 
-  using _uw = std::uint32_t;
-
   typedef struct __EIT_entry
   {
     _uw fnoffset;
     _uw content;
   } __EIT_entry;
 
-  static inline _uw selfrel_offset31(const _uw* p)
+  _uw selfrel_offset31(const _uw* p)
   {
     _uw offset;
 
@@ -203,18 +206,32 @@ extern "C"
 
   extern std::uint32_t __trivial_handle_start;
   extern std::uint32_t __trivial_handle_end;
+  extern std::uint32_t __text_start;
+  extern std::uint32_t __text_end;
+
+  bool is_trivial_function(_uw return_address)
+  {
+    std::uint32_t* check = reinterpret_cast<std::uint32_t*>(return_address);
+    return &__trivial_handle_start <= check && check <= &__trivial_handle_end;
+  }
+
+  std::uint32_t map(std::uint32_t x,
+                    std::uint32_t in_min,
+                    std::uint32_t in_max,
+                    std::uint32_t out_min,
+                    std::uint32_t out_max)
+  {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  }
 
   // NOLINTNEXTLINE
-  const void* search_EIT_table(const __EIT_entry* table,
-                               int nrec, // NOLINT
-                               _uw return_address)
+  const __EIT_entry* search_EIT_table(const __EIT_entry* table,
+                                      int nrec, // NOLINT
+                                      _uw return_address)
   {
-    _uw next_fn;
-    _uw this_fn;
-    int n, left, right;
-
-    if (nrec == 0)
+    if (nrec == 0) {
       return nullptr;
+    }
 
     std::uint32_t* start = &__trivial_handle_start;
     std::uint32_t* end = &__trivial_handle_end;
@@ -225,28 +242,510 @@ extern "C"
       return &table[nrec - 2];
     }
 
-    left = 0;
-    right = nrec - 1;
+    // TODO(kammce): Consider using map() to reduce the search region
+
+    int left = 0;
+    int right = nrec - 1;
 
     while (true) {
-      n = (left + right) / 2;
-      this_fn = selfrel_offset31(&table[n].fnoffset);
-      if (n != nrec - 1)
+      int n = (left + right) / 2;
+      _uw this_fn = selfrel_offset31(&table[n].fnoffset);
+      _uw next_fn = std::numeric_limits<_uw>::max();
+
+      if (n != nrec - 1) {
         next_fn = selfrel_offset31(&table[n + 1].fnoffset) - 1;
-      else
-        next_fn = (_uw)0 - 1;
+      }
 
       if (return_address < this_fn) {
-        if (n == left)
+        if (n == left) {
           return nullptr;
+        }
         right = n - 1;
-      } else if (return_address <= next_fn)
+      } else if (return_address <= next_fn) {
         return &table[n];
-      else
+      } else {
         left = n + 1;
+      }
     }
   }
-}
+
+/* Misc constants.  */
+#define R_IP 12
+#define R_SP 13
+#define R_LR 14
+#define R_PC 15
+
+#define VRS_PC(vrs) ((vrs)->core.r[R_PC])
+#define VRS_SP(vrs) ((vrs)->core.r[R_SP])
+#define VRS_RETURN(vrs) ((vrs)->core.r[R_LR])
+
+  struct core_regs
+  {
+    _uw r[16];
+  };
+
+  /* We use normal integer types here to avoid the compiler generating
+     coprocessor instructions.  */
+  struct vfp_regs
+  {
+    _uw64 d[16];
+    _uw pad;
+  };
+
+  struct vfpv3_regs
+  {
+    /* Always populated via VSTM, so no need for the "pad" field from
+       vfp_regs (which is used to store the format word for FSTMX).  */
+    _uw64 d[16];
+  };
+
+  struct wmmxd_regs
+  {
+    _uw64 wd[16];
+  };
+
+  struct wmmxc_regs
+  {
+    _uw wc[4];
+  };
+
+  /* The ABI specifies that the unwind routines may only use core registers,
+     except when actually manipulating coprocessor state.  This allows
+     us to write one implementation that works on all platforms by
+     demand-saving coprocessor registers.
+
+     During unwinding we hold the coprocessor state in the actual hardware
+     registers and allocate demand-save areas for use during phase1
+     unwinding.  */
+
+  typedef struct
+  {
+    /* The first fields must be the same as a phase2_vrs.  */
+    _uw demand_save_flags;
+    struct core_regs core;
+    _uw prev_sp; /* Only valid during forced unwinding.  */
+    struct vfp_regs vfp;
+    struct vfpv3_regs vfp_regs_16_to_31;
+    struct wmmxd_regs wmmxd;
+    struct wmmxc_regs wmmxc;
+  } phase1_vrs;
+
+#define DEMAND_SAVE_VFP 1   /* VFP state has been saved if not set */
+#define DEMAND_SAVE_VFP_D 2 /* VFP state is for FLDMD/FSTMD if set */
+#define DEMAND_SAVE_VFP_V3                                                     \
+  4 /* VFPv3 state for regs 16 .. 31 has                                       \
+       been saved if not set */
+#define DEMAND_SAVE_WMMXD                                                      \
+  8 /* iWMMXt data registers have been                                         \
+       saved if not set.  */
+#define DEMAND_SAVE_WMMXC                                                      \
+  16 /* iWMMXt control registers have been                                     \
+        saved if not set.  */
+
+  /* This must match the structure created by the assembly wrappers.  */
+  typedef struct
+  {
+    _uw demand_save_flags;
+    struct core_regs core;
+  } phase2_vrs;
+
+  /* Routines for FLDMX/FSTMX format...  */
+  extern void __gnu_Unwind_Save_VFP(vfp_regs* p);
+  extern void __gnu_Unwind_Restore_VFP(vfp_regs* p);
+  extern void __gnu_Unwind_Save_WMMXD(wmmxd_regs* p);
+  extern void __gnu_Unwind_Restore_WMMXD(wmmxd_regs* p);
+  extern void __gnu_Unwind_Save_WMMXC(wmmxc_regs* p);
+  extern void __gnu_Unwind_Restore_WMMXC(wmmxc_regs* p);
+
+  /* ...and those for FLDMD/FSTMD format...  */
+  extern void __gnu_Unwind_Save_VFP_D(vfp_regs* p);
+  extern void __gnu_Unwind_Restore_VFP_D(vfp_regs* p);
+
+  /* ...and those for VLDM/VSTM format, saving/restoring only registers
+     16 through 31.  */
+  extern void __gnu_Unwind_Save_VFP_D_16_to_31(vfpv3_regs* p);
+  extern void __gnu_Unwind_Restore_VFP_D_16_to_31(vfpv3_regs* p);
+
+  static volatile int vfp_show_up = 0;
+
+  _Unwind_VRS_Result _Unwind_VRS_Pop(
+    _Unwind_Context* context,
+    _Unwind_VRS_RegClass regclass,
+    _uw discriminator,
+    _Unwind_VRS_DataRepresentation representation)
+  {
+    phase1_vrs* vrs = (phase1_vrs*)context;
+
+    switch (regclass) {
+      case _UVRSC_CORE: {
+        if (representation != _UVRSD_UINT32) {
+          return _UVRSR_FAILED;
+        }
+
+        _uw mask = discriminator & 0xffff;
+        // The mask may not demand that the stack pointer be popped, but the
+        // stack pointer will still need to be popped anyway, so this check
+        // determins if the mask handles this or not.
+        bool set_stack_pointer_afterwards = (mask & R_SP) == 0x0;
+        _uw* ptr = (_uw*)vrs->core.r[R_SP];
+        /* Pop the requested registers.  */
+        while (mask) {
+          auto reg_to_restore = std::countr_zero(mask);
+          vrs->core.r[reg_to_restore] = *(ptr++);
+          mask &= ~(1 << reg_to_restore);
+        }
+        if (set_stack_pointer_afterwards) {
+          vrs->core.r[R_SP] = (_uw)ptr;
+        }
+      }
+        return _UVRSR_OK;
+      case _UVRSC_VFP:
+        vfp_show_up = vfp_show_up + 1;
+        return _UVRSR_OK;
+      case _UVRSC_WMMXD:
+        return _UVRSR_OK;
+      case _UVRSC_WMMXC:
+        return _UVRSR_OK;
+      default:
+        return _UVRSR_FAILED;
+    }
+  }
+  using _uw8 = std::uint8_t;
+
+  constexpr _uw8 CODE_FINISH = 0xe7;
+  _uw8 next_unwind_byte(__gnu_unwind_state* uws)
+  {
+#if 1
+    _uw8 b;
+
+    if (uws->bytes_left == 0) {
+      /* Load another word */
+      if (uws->words_left == 0)
+        return CODE_FINISH; /* Nothing left.  */
+      uws->words_left--;
+      uws->data = *(uws->next++);
+      uws->bytes_left = 3;
+    } else
+      uws->bytes_left--;
+
+    /* Extract the most significant byte.  */
+    b = (uws->data >> 24) & 0xff;
+    uws->data <<= 8;
+    return b;
+#else
+    if (uws->data >= uws->bytes_left) {
+      return CODE_FINISH;
+    }
+    std::uint8_t* byte_array = reinterpret_cast<std::uint8_t*>(uws->next);
+    _uw8 result = byte_array[uws->data++];
+    return result;
+#endif
+  }
+
+  // ===========================================================================
+  // ===========================================================================
+  // ===========================================================================
+  // ===========================================================================
+  // ===========================================================================
+
+  /* Common implementation for ARM ABI defined personality routines.
+     ID is the index of the personality routine, other arguments are as defined
+     by __aeabi_unwind_cpp_pr{0,1,2}.  */
+
+  enum __cxa_type_match_result
+  {
+    ctm_failed = 0,
+    ctm_succeeded = 1,
+    ctm_succeeded_with_ptr_to_base = 2
+  };
+
+  typedef struct
+  {
+    _uw16 length;
+    _uw16 offset;
+  } EHT16;
+
+  typedef struct
+  {
+    _uw length;
+    _uw offset;
+  } EHT32;
+  // Arm EABI specified routines.
+  extern __cxa_type_match_result __cxa_type_match(_Unwind_Exception*,
+                                                  const std::type_info*,
+                                                  bool,
+                                                  void**);
+  extern bool __cxa_begin_cleanup(_Unwind_Exception*);
+
+#define uint32_highbit (((_uw)1) << 31)
+
+  _Unwind_Reason_Code __gnu_unwind_pr_common(_Unwind_State state,
+                                             _Unwind_Control_Block* ucbp,
+                                             _Unwind_Context* context,
+                                             int id)
+  {
+    __gnu_unwind_state uws;
+    _uw* data;
+    _uw offset;
+    _uw len;
+    _uw rtti_count;
+    int phase2_call_unexpected_after_unwind = 0;
+    int in_range = 0;
+    int forced_unwind = state & _US_FORCE_UNWIND;
+
+    state =
+      static_cast<_Unwind_State>(static_cast<int>(state) & _US_ACTION_MASK);
+
+    data = (_uw*)ucbp->pr_cache.ehtp;
+#if 0
+    if (id == 0) {
+      uws.next = data;
+      uws.data = 1;
+      uws.words_left = 0;
+      uws.bytes_left = 3;
+    } else if (id < 3) {
+      uws.next = data;
+      uws.words_left = (*data >> 16) & 0xff;
+      uws.data <<= 16;
+      uws.bytes_left = 2;
+      data += uws.words_left;
+    }
+#else
+    uws.data = *(data++);
+    uws.next = data;
+    if (id == 0) {
+      uws.data <<= 8;
+      uws.words_left = 0;
+      uws.bytes_left = 3;
+    } else if (id < 3) {
+      uws.words_left = (uws.data >> 16) & 0xff;
+      uws.data <<= 16;
+      uws.bytes_left = 2;
+      data += uws.words_left;
+    }
+#endif
+
+    /* Restore the saved pointer.  */
+    if (state == _US_UNWIND_FRAME_RESUME)
+      data = (_uw*)ucbp->cleanup_cache.bitpattern[0];
+
+    if ((ucbp->pr_cache.additional & 1) == 0) {
+      /* Process descriptors.  */
+      while (*data) {
+        _uw addr;
+        _uw fnstart;
+
+        if (id == 2) {
+          len = ((EHT32*)data)->length;
+          offset = ((EHT32*)data)->offset;
+          data += 2;
+        } else {
+          len = ((EHT16*)data)->length;
+          offset = ((EHT16*)data)->offset;
+          data++;
+        }
+
+        fnstart = ucbp->pr_cache.fnstart + (offset & ~1);
+        addr = _Unwind_GetGR(context, R_PC);
+        in_range = (fnstart <= addr && addr < fnstart + (len & ~1));
+
+        switch (((offset & 1) << 1) | (len & 1)) {
+          case 0:
+            /* Cleanup.  */
+            if (state != _US_VIRTUAL_UNWIND_FRAME && in_range) {
+              /* Cleanup in range, and we are running cleanups.  */
+              _uw lp;
+
+              /* Landing pad address is 31-bit pc-relative offset.  */
+              lp = selfrel_offset31(data);
+              data++;
+              /* Save the exception data pointer.  */
+              ucbp->cleanup_cache.bitpattern[0] = (_uw)data;
+              if (!__cxa_begin_cleanup(ucbp))
+                return _URC_FAILURE;
+              /* Setup the VRS to enter the landing pad.  */
+              _Unwind_SetGR(context, R_PC, lp);
+              return _URC_INSTALL_CONTEXT;
+            }
+            /* Cleanup not in range, or we are in stage 1.  */
+            data++;
+            break;
+
+          case 1:
+            /* Catch handler.  */
+            if (state == _US_VIRTUAL_UNWIND_FRAME) {
+              if (in_range) {
+                /* Check for a barrier.  */
+                _uw rtti;
+                bool is_reference = (data[0] & uint32_highbit) != 0;
+                void* matched;
+                enum __cxa_type_match_result match_type;
+
+                /* Check for no-throw areas.  */
+                if (data[1] == (_uw)-2)
+                  return _URC_FAILURE;
+
+                /* The thrown object immediately follows the ECB.  */
+                matched = (void*)(ucbp + 1);
+                if (data[1] != (_uw)-1) {
+                  /* Match a catch specification.  */
+                  rtti = _Unwind_decode_typeinfo_ptr(0, (_uw)&data[1]);
+                  match_type = __cxa_type_match(
+                    ucbp, (std::type_info*)rtti, is_reference, &matched);
+                } else
+                  match_type = ctm_succeeded;
+
+                if (match_type) {
+                  ucbp->barrier_cache.sp = _Unwind_GetGR(context, R_SP);
+                  // ctm_succeeded_with_ptr_to_base really
+                  // means _c_t_m indirected the pointer
+                  // object.  We have to reconstruct the
+                  // additional pointer layer by using a temporary.
+                  if (match_type == ctm_succeeded_with_ptr_to_base) {
+                    ucbp->barrier_cache.bitpattern[2] = (_uw)matched;
+                    ucbp->barrier_cache.bitpattern[0] =
+                      (_uw)&ucbp->barrier_cache.bitpattern[2];
+                  } else
+                    ucbp->barrier_cache.bitpattern[0] = (_uw)matched;
+                  ucbp->barrier_cache.bitpattern[1] = (_uw)data;
+                  return _URC_HANDLER_FOUND;
+                }
+              }
+              /* Handler out of range, or not matched.  */
+            } else if (ucbp->barrier_cache.sp == _Unwind_GetGR(context, R_SP) &&
+                       ucbp->barrier_cache.bitpattern[1] == (_uw)data) {
+              /* Matched a previous propagation barrier.  */
+              _uw lp;
+
+              /* Setup for entry to the handler.  */
+              lp = selfrel_offset31(data);
+              _Unwind_SetGR(context, R_PC, lp);
+              _Unwind_SetGR(context, 0, (_uw)ucbp);
+              return _URC_INSTALL_CONTEXT;
+            }
+            /* Catch handler not matched.  Advance to the next descriptor.  */
+            data += 2;
+            break;
+
+          case 2:
+            rtti_count = data[0] & 0x7fffffff;
+            /* Exception specification.  */
+            if (state == _US_VIRTUAL_UNWIND_FRAME) {
+              if (in_range && (!forced_unwind || !rtti_count)) {
+                /* Match against the exception specification.  */
+                _uw i;
+                _uw rtti;
+                void* matched;
+
+                for (i = 0; i < rtti_count; i++) {
+                  matched = (void*)(ucbp + 1);
+                  rtti = _Unwind_decode_typeinfo_ptr(0, (_uw)&data[i + 1]);
+                  if (__cxa_type_match(
+                        ucbp, (std::type_info*)rtti, 0, &matched))
+                    break;
+                }
+
+                if (i == rtti_count) {
+                  /* Exception does not match the spec.  */
+                  ucbp->barrier_cache.sp = _Unwind_GetGR(context, R_SP);
+                  ucbp->barrier_cache.bitpattern[0] = (_uw)matched;
+                  ucbp->barrier_cache.bitpattern[1] = (_uw)data;
+                  return _URC_HANDLER_FOUND;
+                }
+              }
+              /* Handler out of range, or exception is permitted.  */
+            } else if (ucbp->barrier_cache.sp == _Unwind_GetGR(context, R_SP) &&
+                       ucbp->barrier_cache.bitpattern[1] == (_uw)data) {
+              /* Matched a previous propagation barrier.  */
+              _uw lp;
+              /* Record the RTTI list for __cxa_call_unexpected.  */
+              ucbp->barrier_cache.bitpattern[1] = rtti_count;
+              ucbp->barrier_cache.bitpattern[2] = 0;
+              ucbp->barrier_cache.bitpattern[3] = 4;
+              ucbp->barrier_cache.bitpattern[4] = (_uw)&data[1];
+
+              if (data[0] & uint32_highbit) {
+                data += rtti_count + 1;
+                /* Setup for entry to the handler.  */
+                lp = selfrel_offset31(data);
+                data++;
+                _Unwind_SetGR(context, R_PC, lp);
+                _Unwind_SetGR(context, 0, (_uw)ucbp);
+                return _URC_INSTALL_CONTEXT;
+              } else
+                phase2_call_unexpected_after_unwind = 1;
+            }
+            if (data[0] & uint32_highbit)
+              data++;
+            data += rtti_count + 1;
+            break;
+
+          default:
+            /* Should never happen.  */
+            return _URC_FAILURE;
+        }
+        /* Finished processing this descriptor.  */
+      }
+    }
+
+    if (id >= 3) {
+      /* 24-bit ecoding */
+      if (__gnu_unwind_24bit(context, uws.data, id == 4) != _URC_OK)
+        return _URC_FAILURE;
+    } else {
+      if (__gnu_unwind_execute(context, &uws) != _URC_OK)
+        return _URC_FAILURE;
+    }
+
+    if (phase2_call_unexpected_after_unwind) {
+      /* Enter __cxa_unexpected as if called from the call site.  */
+      _Unwind_SetGR(context, R_LR, _Unwind_GetGR(context, R_PC));
+      _Unwind_SetGR(context, R_PC, (_uw)&__cxa_call_unexpected);
+      return _URC_INSTALL_CONTEXT;
+    }
+
+    return _URC_CONTINUE_UNWIND;
+  }
+
+#if 0
+  _Unwind_Reason_Code __gnu_unwind_frame(_Unwind_Control_Block* ucbp,
+                                         _Unwind_Context* context)
+  {
+#if 0
+    _uw* ptr;
+    __gnu_unwind_state uws;
+
+    ptr = (_uw*)ucbp->pr_cache.ehtp;
+    /* Skip over the personality routine address.  */
+    ptr++;
+    /* Setup the unwinder state.  */
+    uws.data = (*ptr) << 8;
+    uws.next = ptr + 1;
+    uws.bytes_left = 3;
+    uws.words_left = ((*ptr) >> 24) & 0xff;
+
+    return __gnu_unwind_execute(context, &uws);
+#else
+    _uw* ptr;
+    __gnu_unwind_state uws;
+
+    ptr = (_uw*)ucbp->pr_cache.ehtp;
+    /* Skip over the personality routine address.  */
+    ptr++;
+    /* Setup the unwinder state.  */
+    uint32_t total_words = ((*ptr) >> 24) & 0xff;
+    // uws.words_left = 0;
+    uws.data = 0;
+    uws.next = ptr;
+    uws.bytes_left = total_words * 4;
+
+    return __gnu_unwind_execute(context, &uws);
+#endif
+  }
+#endif
+
+} // extern "C"
+
 int
 start();
 
@@ -469,6 +968,8 @@ funct_group0_4()
   volatile static std::uint32_t inner_side_effect = 0;
   inner_side_effect = inner_side_effect + 1;
   class_0 instance_0(side_effect);
+  volatile static float my_float = 0.0f;
+  my_float = my_float + 5.5f;
   instance_0.trigger();
   side_effect = side_effect + funct_group0_5();
   return side_effect;

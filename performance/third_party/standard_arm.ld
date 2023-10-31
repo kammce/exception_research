@@ -68,6 +68,7 @@ SECTIONS
   } >flash AT>flash :text
 
   .text : {
+    __text_start = .;
     /* code */
     *(.text.unlikely .text.unlikely.*)
     *(.text.startup .text.startup.*)

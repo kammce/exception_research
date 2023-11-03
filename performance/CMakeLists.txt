@@ -81,4 +81,5 @@ macro(new_result_source name)
 endmacro()
 
 new_exception_source(except)
+new_exception_source(except_experimental)
 new_result_source(result)

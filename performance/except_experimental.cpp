@@ -10,8 +10,8 @@
 #include <span>
 #include <string_view>
 
-#define _LIBUNWIND_ARM_EHABI
-#include <unwind-arm-common.h>
+// #define _LIBUNWIND_ARM_EHABI
+// #include <unwind-arm-common.h>
 #include <unwind.h>
 
 volatile std::int32_t side_effect = 0;
@@ -221,15 +221,6 @@ extern "C"
     return &__trivial_handle_start <= check && check <= &__trivial_handle_end;
   }
 
-  std::uint32_t map(std::uint32_t x,
-                    std::uint32_t in_min,
-                    std::uint32_t in_max,
-                    std::uint32_t out_min,
-                    std::uint32_t out_max)
-  {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-  }
-
   struct eit_entry_less_than
   {
     [[gnu::always_inline]] static std::uint32_t to_prel31_offset(
@@ -339,10 +330,6 @@ extern "C"
 #define R_LR 14
 #define R_PC 15
 
-#define VRS_PC(vrs) ((vrs)->core.r[R_PC])
-#define VRS_SP(vrs) ((vrs)->core.r[R_SP])
-#define VRS_RETURN(vrs) ((vrs)->core.r[R_LR])
-
   struct core_regs
   {
     std::uint32_t r[16];
@@ -403,20 +390,16 @@ extern "C"
 
   static volatile int vfp_show_up = 0;
 
-  _Unwind_VRS_Result _Unwind_VRS_Pop(
+  [[gnu::always_inline]] _Unwind_VRS_Result _Unwind_VRS_Pop(
     _Unwind_Context* context,
     _Unwind_VRS_RegClass regclass,
-    std::uint32_t discriminator,
+    _uw discriminator,
     _Unwind_VRS_DataRepresentation representation)
   {
     auto* vrs = reinterpret_cast<phase1_vrs*>(context);
 
     switch (regclass) {
       case _UVRSC_CORE: {
-        if (representation != _UVRSD_UINT32) {
-          return _UVRSR_FAILED;
-        }
-
         std::uint32_t mask = discriminator & 0xffff;
         // The mask may not demand that the stack pointer be popped, but the
         // stack pointer will still need to be popped anyway, so this check
@@ -437,8 +420,6 @@ extern "C"
       }
         return _UVRSR_OK;
       case _UVRSC_VFP:
-        // bring back old implementation for systems that need it
-        vfp_show_up = vfp_show_up + 1;
         return _UVRSR_OK;
       case _UVRSC_WMMXD:
         return _UVRSR_OK;
@@ -448,174 +429,216 @@ extern "C"
         return _UVRSR_FAILED;
     }
   }
-  using _uw8 = std::uint8_t;
+  extern std::uint8_t next_unwind_byte(__gnu_unwind_state* uws);
 
-  constexpr _uw8 code_finished = 0xe7;
-  _uw8 next_unwind_byte(__gnu_unwind_state* uws)
+  [[gnu::always_inline]] _Unwind_VRS_Result _My_Unwind_VRS_Get(
+    _Unwind_Context* context,
+    _Unwind_VRS_RegClass regclass,
+    _uw regno,
+    _Unwind_VRS_DataRepresentation representation,
+    void* valuep)
   {
-    if (uws->bytes_left == 0) {
-      /* Load another word */
-      if (uws->words_left == 0)
-        return code_finished; /* Nothing left.  */
-      uws->words_left--;
-      uws->data = *(uws->next++);
-      uws->bytes_left = 3;
-    } else
-      uws->bytes_left--;
-
-    /* Extract the most significant byte.  */
-    _uw8 b = (uws->data >> 24) & 0xff;
-    uws->data <<= 8;
-    return b;
+    auto* vrs = reinterpret_cast<phase1_vrs*>(context);
+    *(_uw*)valuep = vrs->core.r[regno];
+    return _UVRSR_OK;
   }
 
-  _Unwind_Reason_Code jump_table_test(__gnu_unwind_state* uws)
-  {
-    volatile static _uw8 action = 0;
-    _uw8 instruction = next_unwind_byte(uws);
+  /* ABI defined function to load a virtual register from memory.  */
 
-    switch (instruction) {
-      // VSP = VSP + (0bxxxxxx << 2) + 4
-      // Covers range 0x04 - 0x100 inclusive
-      case 0b00'000000 ... 0b00'111111: {
-        action = (instruction & 0b111111);
+  [[gnu::always_inline]] _Unwind_VRS_Result _My_Unwind_VRS_Set(
+    _Unwind_Context* context,
+    _Unwind_VRS_RegClass regclass,
+    _uw regno,
+    _Unwind_VRS_DataRepresentation representation,
+    void* valuep)
+  {
+    auto* vrs = reinterpret_cast<phase1_vrs*>(context);
+    vrs->core.r[regno] = *(_uw*)valuep;
+    return _UVRSR_OK;
+  }
+
+  /* Execute the unwinding instructions described by UWS.  */
+  _Unwind_Reason_Code __gnu_unwind_execute(_Unwind_Context* context,
+                                           __gnu_unwind_state* uws)
+  {
+    _uw op;
+    int set_pc;
+    _uw reg;
+
+    set_pc = 0;
+    for (;;) {
+      op = next_unwind_byte(uws);
+      if (op == 0xb0) {
+        /* If we haven't already set pc then copy it from lr.  */
+        if (!set_pc) {
+          _My_Unwind_VRS_Get(context, _UVRSC_CORE, R_LR, _UVRSD_UINT32, &reg);
+          _My_Unwind_VRS_Set(context, _UVRSC_CORE, R_PC, _UVRSD_UINT32, &reg);
+          set_pc = 1;
+        }
+        /* Drop out of the loop.  */
         break;
       }
-      // VSP = VSP - (0bxxxxxx << 2) + 4
-      // Covers range 0x04 - 0x100 inclusive
-      case 0b01'000000 ... 0b01'111111: {
-        action = (instruction & 0b111111);
-        break;
+      if ((op & 0x80) == 0) {
+        /* vsp = vsp +- (imm6 << 2 + 4).  */
+        _uw offset;
+
+        offset = ((op & 0x3f) << 2) + 4;
+        _My_Unwind_VRS_Get(context, _UVRSC_CORE, R_SP, _UVRSD_UINT32, &reg);
+        if (op & 0x40)
+          reg -= offset;
+        else
+          reg += offset;
+        _My_Unwind_VRS_Set(context, _UVRSC_CORE, R_SP, _UVRSD_UINT32, &reg);
+        continue;
       }
-      // Pop up to 12 integer registers under masks
-      // {r15-r12}, {r11-r4} (see remark b)
-      // Requires additional instruction
-      case 0b1000'0000 ... 0b1000'1111: {
-        // If next byte is 0b00000000, then refuse to unwind
-        // return _URC_FAILURE
-        break;
-      }
-      // Set vsp = reg[nnnn]
-      case 0b1001'0000 ... 0b1001'1111: {
-        // 0b10011101 = Reserved as prefix for Arm register to register
-        // moves
-        // 0b10011111 = Reserved as prefix for Intel Wireless MMX register
-        // to register moves
-        if (instruction == 0b10011101 || instruction == 0b10011111) {
+
+      if ((op & 0xf0) == 0x80) {
+        op = (op << 8) | next_unwind_byte(uws);
+        if (op == 0x8000) {
+          /* Refuse to unwind.  */
           return _URC_FAILURE;
         }
-      }
-      // Pop r4-r[4+nnn]
-      case 0b10100'000 ... 0b10100'111: {
-        break;
-      }
-      // Pop r4-r[4+nnn] and r14
-      case 0b10101'000 ... 0b10101'111: {
-        break;
-      }
-      // Finish (see remark c)
-      case 0b10110000: {
-        break;
-      }
-      // Pop integer registers under mask {r3, r2, r1, r0}
-      case 0b10110001: {
-        // Read next byte to determine if this is a spare
-        // instruction resulting in a Return _URC_FAILURE
-        _uw8 pop_mask = next_unwind_byte(uws);
-        // pop_mask == 0b00000000 => Spare (see remark f)
-        // pop_mask == 0bxxxx'yyyy => Spare (xxxx != 0000)
-        if (pop_mask == 0b00000000 || pop_mask >= 0b0001'0000) {
+        /* Pop r4-r15 under mask.  */
+        op = (op << 4) & 0xfff0;
+        if (_Unwind_VRS_Pop(context, _UVRSC_CORE, op, _UVRSD_UINT32) !=
+            _UVRSR_OK)
           return _URC_FAILURE;
+        if (op & (1 << R_PC))
+          set_pc = 1;
+        continue;
+      }
+      if ((op & 0xf0) == 0x90) {
+        op &= 0xf;
+        if (op == 13 || op == 15)
+          /* Reserved.  */
+          return _URC_FAILURE;
+        /* vsp = r[nnnn].  */
+        _My_Unwind_VRS_Get(context, _UVRSC_CORE, op, _UVRSD_UINT32, &reg);
+        _My_Unwind_VRS_Set(context, _UVRSC_CORE, R_SP, _UVRSD_UINT32, &reg);
+        continue;
+      }
+      if ((op & 0xf0) == 0xa0) {
+        /* Pop r4-r[4+nnn], [lr].  */
+        _uw mask;
+
+        mask = (0xff0 >> (7 - (op & 7))) & 0xff0;
+        if (op & 8)
+          mask |= (1 << R_LR);
+        if (_Unwind_VRS_Pop(context, _UVRSC_CORE, mask, _UVRSD_UINT32) !=
+            _UVRSR_OK)
+          return _URC_FAILURE;
+        continue;
+      }
+      if ((op & 0xf0) == 0xb0) {
+        /* op == 0xb0 already handled.  */
+        if (op == 0xb1) {
+          op = next_unwind_byte(uws);
+          if (op == 0 || ((op & 0xf0) != 0))
+            /* Spare.  */
+            return _URC_FAILURE;
+          /* Pop r0-r4 under mask.  */
+          if (_Unwind_VRS_Pop(context, _UVRSC_CORE, op, _UVRSD_UINT32) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
         }
-        break;
+        if (op == 0xb2) {
+          /* vsp = vsp + 0x204 + (uleb128 << 2).  */
+          int shift;
+
+          _My_Unwind_VRS_Get(context, _UVRSC_CORE, R_SP, _UVRSD_UINT32, &reg);
+          op = next_unwind_byte(uws);
+          shift = 2;
+          while (op & 0x80) {
+            reg += ((op & 0x7f) << shift);
+            shift += 7;
+            op = next_unwind_byte(uws);
+          }
+          reg += ((op & 0x7f) << shift) + 0x204;
+          _My_Unwind_VRS_Set(context, _UVRSC_CORE, R_SP, _UVRSD_UINT32, &reg);
+          continue;
+        }
+        if (op == 0xb3) {
+          /* Pop VFP registers with fldmx.  */
+          op = next_unwind_byte(uws);
+          op = ((op & 0xf0) << 12) | ((op & 0xf) + 1);
+          if (_Unwind_VRS_Pop(context, _UVRSC_VFP, op, _UVRSD_VFPX) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        if ((op & 0xfc) == 0xb4) /* Obsolete FPA.  */
+          return _URC_FAILURE;
+
+        /* op & 0xf8 == 0xb8.  */
+        /* Pop VFP D[8]-D[8+nnn] with fldmx.  */
+        op = 0x80000 | ((op & 7) + 1);
+        if (_Unwind_VRS_Pop(context, _UVRSC_VFP, op, _UVRSD_VFPX) != _UVRSR_OK)
+          return _URC_FAILURE;
+        continue;
       }
-      // vsp = vsp + 0x204 + (uleb128 << 2)
-      // (for vsp increments of 0x104-0x200, use 00xxxxxx twice)
-      case 0b10110010: {
-        // Read following sequency of bytes to create uleb128 value
-        // and execute virtual stack pointer arithemetic
-        break;
-      }
-      // Pop VFP double-precision registers D[ssss]-D[ssss+cccc]
-      // saved (as if) by FSTMFDX (see remark d)
-      case 0b10110011: {
-        // Next byte holds the 0bssss'cccc value
-        _uw8 range_mask = next_unwind_byte(uws);
-        _uw8 start = (range_mask >> 4) & 0xFF;
-        _uw8 offset = range_mask & 0xFF;
-        _uw8 end = start + offset;
-        break;
-      }
-      // 0b10110100 = Pop Return Address Authentication Code
-      // pseudo-register (see remark g)
-      // 0b10110101 = Use current vsp as modifier in Return
-      // Address Authentication (see remark h)
-      case 0b10110100:
-      case 0b10110101: {
-        // IDK how to do this
-        break;
-      }
-      // Spare (was Pop FPA)
-      case 0b1011011'0 ... 0b1011011'1: {
+      if ((op & 0xf0) == 0xc0) {
+        if (op == 0xc6) {
+          /* Pop iWMMXt D registers.  */
+          op = next_unwind_byte(uws);
+          op = ((op & 0xf0) << 12) | ((op & 0xf) + 1);
+          if (_Unwind_VRS_Pop(context, _UVRSC_WMMXD, op, _UVRSD_UINT64) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        if (op == 0xc7) {
+          op = next_unwind_byte(uws);
+          if (op == 0 || (op & 0xf0) != 0)
+            /* Spare.  */
+            return _URC_FAILURE;
+          /* Pop iWMMXt wCGR{3,2,1,0} under mask.  */
+          if (_Unwind_VRS_Pop(context, _UVRSC_WMMXC, op, _UVRSD_UINT32) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        if ((op & 0xf8) == 0xc0) {
+          /* Pop iWMMXt wR[10]-wR[10+nnn].  */
+          op = 0xa0000 | ((op & 0xf) + 1);
+          if (_Unwind_VRS_Pop(context, _UVRSC_WMMXD, op, _UVRSD_UINT64) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        if (op == 0xc8) {
+          /* Pop VFPv3 registers D[16+ssss]-D[16+ssss+cccc] with vldm.  */
+          op = next_unwind_byte(uws);
+          op = (((op & 0xf0) + 16) << 12) | ((op & 0xf) + 1);
+          if (_Unwind_VRS_Pop(context, _UVRSC_VFP, op, _UVRSD_DOUBLE) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        if (op == 0xc9) {
+          /* Pop VFP registers with fldmd.  */
+          op = next_unwind_byte(uws);
+          op = ((op & 0xf0) << 12) | ((op & 0xf) + 1);
+          if (_Unwind_VRS_Pop(context, _UVRSC_VFP, op, _UVRSD_DOUBLE) !=
+              _UVRSR_OK)
+            return _URC_FAILURE;
+          continue;
+        }
+        /* Spare.  */
         return _URC_FAILURE;
       }
-      // Pop VFP double-precision registers D[8]-D[8+nnn]
-      // saved (as if) by FSTMFDX (see remark d)
-      case 0b10111'000 ... 0b10111'111: {
-        action = instruction & 0b111;
-        break;
+      if ((op & 0xf8) == 0xd0) {
+        /* Pop VFP D[8]-D[8+nnn] with fldmd.  */
+        op = 0x80000 | ((op & 7) + 1);
+        if (_Unwind_VRS_Pop(context, _UVRSC_VFP, op, _UVRSD_DOUBLE) !=
+            _UVRSR_OK)
+          return _URC_FAILURE;
+        continue;
       }
-      // 0b10111nnn = Intel Wireless MMX pop wR[10]-wR[10+nnn]
-      // (nnn != 6,7)
-      // 0b11000110 = Intel Wireless MMX pop wR[ssss]-wR[ssss+cccc]
-      // (see remark e)
-      // 0b11000111 0b00000000 = Spare
-      // 0b11000111 0b0000iiii = Intel Wireless MMX pop wCGR registers
-      // under mask {wCGR3,2,1,0}
-      // 0b11000111 0bxxxxyyyy = Spare (xxxx != 0000)
-      case 0b11000'000 ... 0b11000'111: {
-        // NO ONE SUPPORTS THIS!
-        // LETS NOT WASTE CODE SPACE FOR THIS.
-        return _URC_FAILURE;
-      }
-      // Pop VFP double precision registers D[16+ssss]-D[16+ssss+cccc]
-      // saved (as if) by VPUSH (see remarks d,e)
-      case 0b11001000: {
-        // Next byte holds the 0bssss'cccc value
-        _uw8 range_mask = next_unwind_byte(uws);
-        _uw8 start = (range_mask >> 4) & 0xFF;
-        _uw8 offset = range_mask & 0xFF;
-        _uw8 end = start + offset;
-        break;
-      }
-      // Pop VFP double precision registers D[ssss]-D[ssss+cccc]
-      // saved (as if) by VPUSH (see remark d)
-      case 0b11001001: {
-        // Next byte holds the 0bssss'cccc value
-        _uw8 range_mask = next_unwind_byte(uws);
-        _uw8 start = (range_mask >> 4) & 0xFF;
-        _uw8 offset = range_mask & 0xFF;
-        _uw8 end = start + offset;
-        break;
-      }
-      // Spare (yyy != 000, 001)
-      case 0b11001'010 ... 0b11001'111: {
-        return _URC_FAILURE;
-      }
-      // Pop VFP double-precision registers D[8]-D[8+nnn]
-      // saved (as if) by VPUSH (see remark d)
-      case 0b11010'000 ... 0b11010'111: {
-        break;
-      }
-      // 0b11'xxx'yyy = Spare (xxx != 000, 001, 010)
-      case 0b11'011'000 ... 0b11'111'000: {
-        return _Unwind_Reason_Code::_URC_FAILURE;
-      }
-      default: {
-        return _URC_FAILURE;
-      }
+      /* Spare.  */
+      return _URC_FAILURE;
     }
-    return _URC_FAILURE;
+    return _URC_OK;
   }
 #endif
 } // extern "C"
@@ -631,6 +654,15 @@ main()
   *reinterpret_cast<std::uint32_t*>(0x400F'C000) = 0xA;
   volatile int return_code = 0;
   try {
+#if 0
+    __gnu_unwind_state uws{
+      .data = 0,
+      .next = nullptr,
+      .bytes_left = 3,
+      .words_left = 0,
+    };
+    (void)jump_table_test(&uws);
+#endif
     return_code = start();
   } catch (...) {
     return_code = -1;

@@ -44,6 +44,45 @@ macro(new_exception_source name)
   libhal_disassemble(${name}.elf)
 endmacro()
 
+macro(new_exception_ram_source name)
+  add_executable(${name}.elf ${name}.cpp)
+  target_compile_options(${name}.elf PRIVATE
+    -g
+    -Wall
+    -Wextra
+    -Wpedantic
+    -fno-rtti
+    -mthumb
+    -ffunction-sections
+    -fdata-sections
+    -mfloat-abi=hard
+    -mcpu=cortex-m4
+    -fexceptions
+  )
+  target_include_directories(${name}.elf PUBLIC .)
+  target_compile_features(${name}.elf PRIVATE cxx_std_20)
+  target_link_options(${name}.elf PRIVATE
+    -Wl,--wrap=__cxa_allocate_exception
+    -Wl,--wrap=__cxa_free_exception
+    -Wl,--wrap=__cxa_call_unexpected
+    -Wl,--wrap=search_EIT_table
+    --specs=nosys.specs
+    --specs=picolibc.specs
+    -mfloat-abi=hard
+    -mcpu=cortex-m4
+    -mfpu=auto
+    -fno-rtti
+    -mthumb
+    -ffunction-sections
+    -fdata-sections
+    -fexceptions
+    -L${CMAKE_SOURCE_DIR}/
+    -T${CMAKE_SOURCE_DIR}/ram_linker.ld
+  )
+  libhal_post_build(${name}.elf)
+  libhal_disassemble(${name}.elf)
+endmacro()
+
 macro(new_result_source name)
   add_executable(${name}.elf ${name}.cpp)
   target_compile_options(${name}.elf PRIVATE
@@ -82,4 +121,5 @@ endmacro()
 
 new_exception_source(except)
 new_exception_source(except_experimental)
+new_exception_ram_source(except_experimental_ram)
 new_result_source(result)

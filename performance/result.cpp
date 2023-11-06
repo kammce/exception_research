@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <limits>
 #include <span>
 #include <string_view>
 
@@ -153,6 +154,7 @@ main()
 }
 
 std::array<std::uint64_t, 25> cycle_map{};
+std::array<std::uint64_t, 25> happy_cycle_map{};
 
 tl::expected<int, my_error_t>
 funct_group0_0();
@@ -204,160 +206,42 @@ tl::expected<int, my_error_t>
 funct_group23_0();
 tl::expected<int, my_error_t>
 funct_group24_0();
+
+using signature = tl::expected<int, my_error_t>(void);
+
+std::array<signature*, 25> functions = {
+  funct_group0_0,  funct_group1_0,  funct_group2_0,  funct_group3_0,
+  funct_group4_0,  funct_group5_0,  funct_group6_0,  funct_group7_0,
+  funct_group8_0,  funct_group9_0,  funct_group10_0, funct_group11_0,
+  funct_group12_0, funct_group13_0, funct_group14_0, funct_group15_0,
+  funct_group16_0, funct_group17_0, funct_group18_0, funct_group19_0,
+  funct_group20_0, funct_group21_0, funct_group22_0, funct_group23_0,
+  funct_group24_0
+};
+
 tl::expected<int, my_error_t>
 start()
 {
-
-  start_cycles = uptime();
-  if (auto result = funct_group0_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[0] = end_cycles - start_cycles;
+  cycle_map.fill(0);
+  happy_cycle_map.fill(std::numeric_limits<std::int32_t>::max());
+  std::uint32_t index = 0;
+  for (auto& funct : functions) {
+    start_cycles = uptime();
+    if (auto result = funct(); !result) {
+      end_cycles = uptime();
+      cycle_map[index++] = end_cycles - start_cycles;
+    }
   }
-
-  start_cycles = uptime();
-  if (auto result = funct_group1_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[1] = end_cycles - start_cycles;
+  index = 0;
+  for (auto& funct : functions) {
+    // should prevent result from being unexpected
+    side_effect = -1'000'000'000;
+    start_cycles = uptime();
+    if (auto result = funct(); result) {
+      end_cycles = uptime();
+      happy_cycle_map[index++] = end_cycles - start_cycles;
+    }
   }
-
-  start_cycles = uptime();
-  if (auto result = funct_group2_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[2] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group3_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[3] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group4_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[4] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group5_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[5] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group6_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[6] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group7_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[7] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group8_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[8] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group9_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[9] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group10_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[10] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group11_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[11] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group12_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[12] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group13_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[13] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group14_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[14] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group15_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[15] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group16_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[16] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group17_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[17] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group18_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[18] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group19_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[19] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group20_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[20] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group21_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[21] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group22_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[22] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group23_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[23] = end_cycles - start_cycles;
-  }
-
-  start_cycles = uptime();
-  if (auto result = funct_group24_0(); !result) {
-    end_cycles = uptime();
-    cycle_map[24] = end_cycles - start_cycles;
-  }
-
   return side_effect;
 }
 

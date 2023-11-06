@@ -1,3 +1,4 @@
+#include <unwind.h>
 
 #include <algorithm>
 #include <array>
@@ -9,10 +10,6 @@
 #include <limits>
 #include <span>
 #include <string_view>
-
-// #define _LIBUNWIND_ARM_EHABI
-// #include <unwind-arm-common.h>
-#include <unwind.h>
 
 volatile std::int32_t side_effect = 0;
 std::uint32_t start_cycles = 0;
@@ -429,7 +426,28 @@ extern "C"
         return _UVRSR_FAILED;
     }
   }
-  extern std::uint8_t next_unwind_byte(__gnu_unwind_state* uws);
+
+  /* Return the next byte of unwinding information, or CODE_FINISH if there is
+     no data remaining.  */
+  [[gnu::always_inline]] _uw8 next_unwind_byte(__gnu_unwind_state* uws)
+  {
+    _uw8 b;
+
+    if (uws->bytes_left == 0) {
+      /* Load another word */
+      if (uws->words_left == 0)
+        return 0xB0; /* Nothing left.  */
+      uws->words_left--;
+      uws->data = *(uws->next++);
+      uws->bytes_left = 3;
+    } else
+      uws->bytes_left--;
+
+    /* Extract the most significant byte.  */
+    b = (uws->data >> 24) & 0xff;
+    uws->data <<= 8;
+    return b;
+  }
 
   [[gnu::always_inline]] _Unwind_VRS_Result _My_Unwind_VRS_Get(
     _Unwind_Context* context,
@@ -654,15 +672,6 @@ main()
   *reinterpret_cast<std::uint32_t*>(0x400F'C000) = 0xA;
   volatile int return_code = 0;
   try {
-#if 0
-    __gnu_unwind_state uws{
-      .data = 0,
-      .next = nullptr,
-      .bytes_left = 3,
-      .words_left = 0,
-    };
-    (void)jump_table_test(&uws);
-#endif
     return_code = start();
   } catch (...) {
     return_code = -1;
@@ -672,6 +681,7 @@ main()
 }
 
 std::array<std::uint64_t, 25> cycle_map{};
+std::array<std::uint64_t, 25> happy_cycle_map{};
 
 int
 funct_group0_0();
@@ -726,6 +736,7 @@ funct_group24_0();
 
 using signature = int(void);
 
+#if 0
 std::array<signature*, 25> functions = {
   funct_group0_0,  funct_group1_0,  funct_group2_0,  funct_group3_0,
   funct_group4_0,  funct_group5_0,  funct_group6_0,  funct_group7_0,
@@ -735,10 +746,23 @@ std::array<signature*, 25> functions = {
   funct_group20_0, funct_group21_0, funct_group22_0, funct_group23_0,
   funct_group24_0
 };
+#else
+std::array<signature*, 25> functions = {
+  funct_group0_0,  funct_group1_0,  funct_group2_0,  funct_group3_0,
+  funct_group0_0,  funct_group5_0,  funct_group6_0,  funct_group7_0,
+  funct_group8_0,  funct_group0_0,  funct_group10_0, funct_group11_0,
+  funct_group12_0, funct_group13_0, funct_group0_0,  funct_group15_0,
+  funct_group16_0, funct_group17_0, funct_group18_0, funct_group0_0,
+  funct_group20_0, funct_group21_0, funct_group22_0, funct_group23_0,
+  funct_group0_0
+};
+#endif
+
 int
 start()
 {
   cycle_map.fill(0);
+  happy_cycle_map.fill(std::numeric_limits<std::int32_t>::max());
   std::uint32_t index = 0;
   for (auto& funct : functions) {
     try {
@@ -747,6 +771,22 @@ start()
     } catch ([[maybe_unused]] const my_error_t& p_error) {
       end_cycles = uptime();
       cycle_map[index++] = end_cycles - start_cycles;
+    }
+  }
+  index = 0;
+  for (auto& funct : functions) {
+    bool was_caught = false;
+    try {
+      // should prevent throw from executing
+      side_effect = -1'000'000'000;
+      start_cycles = uptime();
+      funct();
+    } catch ([[maybe_unused]] const my_error_t& p_error) {
+      was_caught = true;
+    }
+    if (!was_caught) {
+      end_cycles = uptime();
+      happy_cycle_map[index++] = end_cycles - start_cycles;
     }
   }
   return side_effect;

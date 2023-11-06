@@ -4,10 +4,10 @@ from rich.progress import track
 import sys
 
 gdbmi = GdbController(command=[
-    '/Users/kammce/.conan2/p/b/arm-g788a41ed25167/p/bin/bin/arm-none-eabi-gdb',
-    'build/MinSizeRel/except.elf',
+    '/Users/kammce/.conan2/p/b/arm-g724ef3e080948/p/bin/bin/arm-none-eabi-gdb',
+    'build/MinSizeRel/except_experimental.elf',
     '--interpreter=mi'
-], time_to_check_for_additional_output_sec=0.005)
+], time_to_check_for_additional_output_sec=0.001)
 
 my_stderr = Console(file=sys.stderr)
 my_stdout = Console(file=sys.stdout)

@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(exception_v_result LANGUAGES CXX)
 
-find_package(tl-expected REQUIRED)
+# find_package(tl-expected REQUIRED)
+find_package(prebuilt-picolibc REQUIRED)
 
 macro(new_exception_source name)
   add_executable(${name}.elf ${name}.cpp)
@@ -27,12 +28,8 @@ macro(new_exception_source name)
     -Wl,--wrap=__cxa_free_exception
     -Wl,--wrap=__cxa_call_unexpected
     -Wl,--wrap=search_EIT_table
-    --specs=nosys.specs
-    --specs=picolibc.specs
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
-    -mfpu=auto
     -fno-rtti
+    -fno-omit-frame-pointer
     -mthumb
     -ffunction-sections
     -fdata-sections
@@ -42,6 +39,7 @@ macro(new_exception_source name)
   )
   libhal_post_build(${name}.elf)
   libhal_disassemble(${name}.elf)
+  target_link_libraries(${name}.elf PRIVATE picolibc)
 endmacro()
 
 macro(new_exception_ram_source name)
@@ -66,10 +64,7 @@ macro(new_exception_ram_source name)
     -Wl,--wrap=__cxa_free_exception
     -Wl,--wrap=__cxa_call_unexpected
     -Wl,--wrap=search_EIT_table
-    --specs=nosys.specs
-    --specs=picolibc.specs
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
+    -fno-omit-frame-pointer
     -mfpu=auto
     -fno-rtti
     -mthumb
@@ -81,6 +76,7 @@ macro(new_exception_ram_source name)
   )
   libhal_post_build(${name}.elf)
   libhal_disassemble(${name}.elf)
+  target_link_libraries(${name}.elf PRIVATE picolibc)
 endmacro()
 
 macro(new_result_source name)
@@ -122,4 +118,4 @@ endmacro()
 new_exception_source(except)
 new_exception_source(except_experimental)
 new_exception_ram_source(except_experimental_ram)
-new_result_source(result)
+# new_result_source(result)

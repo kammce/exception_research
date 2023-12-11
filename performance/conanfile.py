@@ -24,11 +24,12 @@ class application(ConanFile):
 
     def build_requirements(self):
         self.tool_requires("cmake/3.27.1")
-        self.tool_requires("libhal-cmake-util/2.1.1")
-        self.tool_requires("arm-gnu-toolchain/12.2.1")
+        self.tool_requires("libhal-cmake-util/3.0.1")
+        self.tool_requires("arm-gnu-toolchain/12.2")
 
     def requirements(self):
-        self.requires("tl-expected/20190710")
+        self.requires("prebuilt-picolibc/12.2.1")
+        # self.requires("tl-expected/20190710")
 
     def layout(self):
         cmake_layout(self)

@@ -268,11 +268,23 @@ std::array<signature*, 25> functions = {
   funct_group20_0, funct_group21_0, funct_group22_0, funct_group23_0,
   funct_group24_0
 };
+
+std::uint64_t iterate_start = 0;
+std::uint64_t iterate_end = 0;
+std::uint64_t call_latency = 0;
+
 int
 start()
 {
   cycle_map.fill(0);
+  auto call_latency_test_start = uptime();
+  auto call_latency_test_end = uptime();
+  call_latency = call_latency_test_end - call_latency_test_start;
+
   std::uint32_t index = 0;
+
+
+
   for (auto& funct : functions) {
     try {
       start_cycles = uptime();

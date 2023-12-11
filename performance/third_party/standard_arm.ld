@@ -134,6 +134,13 @@ SECTIONS
     . = ALIGN(8);
     PROVIDE(__trivial_handle_end = .);
   }  >flash AT>flash :text
+
+  .fit_sw : {
+    PROVIDE(__fit_sw_start = .);
+    *(.fit_sw)
+    . = ALIGN(8);
+    PROVIDE(__fit_sw_end = .);
+  }  >flash AT>flash :text
   /*
    * Data values which are preserved across reset
    */

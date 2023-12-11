@@ -395,6 +395,25 @@ arm-none-eabi-objcopy \
 /Users/kammce/.conan2/p/b/arm-g788a41ed25167/p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a
 ```
 
+Full:
+
+```bash
+arm-none-eabi-objcopy \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a \
+--globalize-symbol=search_EIT_table --weaken-symbol=search_EIT_table \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a
+
+arm-none-eabi-objcopy \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a \
+--globalize-symbol=_Unwind_VRS_Pop --weaken-symbol=_Unwind_VRS_Pop \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a
+
+arm-none-eabi-objcopy \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a \
+--globalize-symbol=__gnu_unwind_execute --weaken-symbol=__gnu_unwind_execute \
+<insert_path_to_arm-gnu-toolchain>p/bin/bin/../lib/gcc/arm-none-eabi/12.2.1/thumb/v7e-m+fp/hard/libgcc.a
+```
+
 ## :busts_in_silhouette: Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.

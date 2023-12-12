@@ -253,12 +253,12 @@ extern "C"
     if (nrec == 0) {
       return nullptr;
     }
-
+#if 1
     if (is_trivial_function(return_address)) {
       return &table[nrec - 2];
     }
-
-#define SEARCH_ALGORITHM 2
+#endif
+#define SEARCH_ALGORITHM 0
 #if SEARCH_ALGORITHM == 0
     int left = 0;
     int right = nrec - 1;
@@ -475,9 +475,6 @@ extern "C"
     return _UVRSR_OK;
   }
 
-  extern std::intptr_t __fit_sw_start;
-  extern std::intptr_t __fit_sw_end;
-
   /* Execute the unwinding instructions described by UWS.  */
   _Unwind_Reason_Code __gnu_unwind_execute(_Unwind_Context* context,
                                            __gnu_unwind_state* uws)
@@ -485,22 +482,6 @@ extern "C"
     _uw op;
     int set_pc;
     _uw reg;
-
-    auto* vrs = reinterpret_cast<phase1_vrs*>(context);
-    std::uint32_t pc = reinterpret_cast<std::uint32_t>(vrs->core.r[R_PC]);
-    std::uint32_t* sp = reinterpret_cast<std::uint32_t*>(vrs->core.r[R_SP]);
-
-    if (pc > reinterpret_cast<std::uint32_t>(&__fit_sw_start)) {
-      do {
-        pc = *sp;
-        sp = reinterpret_cast<std::uint32_t*>(*(sp - 1));
-      } while (pc > reinterpret_cast<std::uint32_t>(&__fit_sw_start));
-
-      vrs->core.r[R_PC] = pc;
-      vrs->core.r[R_SP] = reinterpret_cast<std::uint32_t>(sp);
-      return _URC_OK;
-    }
-
     set_pc = 0;
     for (;;) {
       op = next_unwind_byte(uws);
@@ -860,7 +841,7 @@ private:
 int
 funct_group0_1();
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -874,7 +855,7 @@ funct_group0_0()
 int
 funct_group0_2();
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -888,7 +869,7 @@ funct_group0_1()
 int
 funct_group0_3();
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -902,7 +883,7 @@ funct_group0_2()
 int
 funct_group0_4();
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -916,7 +897,7 @@ funct_group0_3()
 int
 funct_group0_5();
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -929,7 +910,7 @@ funct_group0_4()
   return side_effect;
 }
 
-[[gnu::section(".fit_sw")]] int
+[[gnu::section(".trivial_handle")]] int
 funct_group0_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;

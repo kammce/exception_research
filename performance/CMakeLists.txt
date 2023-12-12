@@ -17,8 +17,6 @@ macro(new_exception_source name)
     -mthumb
     -ffunction-sections
     -fdata-sections
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
     -fexceptions
   )
   target_include_directories(${name}.elf PUBLIC .)
@@ -29,7 +27,6 @@ macro(new_exception_source name)
     -Wl,--wrap=__cxa_call_unexpected
     -Wl,--wrap=search_EIT_table
     -fno-rtti
-    -fno-omit-frame-pointer
     -mthumb
     -ffunction-sections
     -fdata-sections
@@ -53,8 +50,6 @@ macro(new_exception_ram_source name)
     -mthumb
     -ffunction-sections
     -fdata-sections
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
     -fexceptions
   )
   target_include_directories(${name}.elf PUBLIC .)
@@ -64,8 +59,6 @@ macro(new_exception_ram_source name)
     -Wl,--wrap=__cxa_free_exception
     -Wl,--wrap=__cxa_call_unexpected
     -Wl,--wrap=search_EIT_table
-    -fno-omit-frame-pointer
-    -mfpu=auto
     -fno-rtti
     -mthumb
     -ffunction-sections
@@ -90,18 +83,11 @@ macro(new_result_source name)
     -mthumb
     -ffunction-sections
     -fdata-sections
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
     -fno-exceptions
   )
   target_include_directories(${name}.elf PUBLIC .)
   target_compile_features(${name}.elf PRIVATE cxx_std_20)
   target_link_options(${name}.elf PRIVATE
-    --specs=nosys.specs
-    --specs=picolibc.specs
-    -mfloat-abi=hard
-    -mcpu=cortex-m4
-    -mfpu=auto
     -fno-rtti
     -mthumb
     -ffunction-sections

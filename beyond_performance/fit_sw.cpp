@@ -93,6 +93,7 @@ auto* core = reinterpret_cast<core_debug_registers_t*>(core_debug_address);
 void
 dwt_counter_enable()
 {
+#if __arm__
   /**
    * @brief This bit must be set to 1 to enable use of the trace and debug
    * blocks:
@@ -115,12 +116,26 @@ dwt_counter_enable()
 
   // Start cycle count
   dwt->ctrl = (dwt->ctrl | enable_cycle_count);
+#endif
+}
+
+void
+enable_flash_accelerator()
+{
+#if __arm__
+  // Set flash accelerator to 1 CPU cycle per instruction
+  *reinterpret_cast<std::uint32_t*>(0x400F'C000) = 0xA;
+#endif
 }
 
 std::uint32_t
 uptime()
 {
+#if __arm__
   return dwt->cyccnt;
+#else
+  return 0;
+#endif
 }
 
 struct my_error_t
@@ -141,6 +156,7 @@ std::terminate_handler __terminate_handler = terminate; // NOLINT
 }
 
 std::uint64_t iterate_time = 0;
+std::uint64_t relative_iterate_time = 0;
 std::uint64_t call_latency = 0;
 
 template<size_t SizeBytes>
@@ -169,7 +185,58 @@ public:
   std::intptr_t m_sp_index = 0;
 };
 
+template<size_t SizeBytes>
+class fake_stack_with_relative_frame_pointer
+{
+public:
+  bool allocate_memory_and_push_sp_and_pc(
+    std::intptr_t p_number_of_registers_pushed,
+    std::intptr_t p_pc,
+    size_t p_local_variable_word_size)
+  {
+
+    if (m_sp_index + p_local_variable_word_size + p_number_of_registers_pushed +
+          1 >
+        m_stack.size()) {
+      return false;
+    }
+    auto old_sp_index = m_sp_index;
+
+    // Inject pushed registers
+    for (std::intptr_t i = 0; i < p_number_of_registers_pushed; i++) {
+      // 0xABCD MSB is used to mark that this is a register entry in the data
+      // The LSB bytes will indicate the count.
+      m_stack[m_sp_index] = 0xABCD'0000 + i;
+      m_sp_index += 1;
+    }
+
+    // Inject PC
+    m_stack[m_sp_index] = p_pc;
+    m_sp_index++;
+
+    // Allocate local variables plus the space for the tail frame pointer
+    m_sp_index += p_local_variable_word_size + 1;
+
+    // Set tail frame pointer
+    std::uint32_t trivial_unwind_data = 0;
+    const auto frame_pointer_distance = m_sp_index - (old_sp_index + 1);
+    const auto link_register_distance =
+      frame_pointer_distance - (p_number_of_registers_pushed - 1);
+
+    m_stack[m_sp_index - 1] =
+      link_register_distance << 16 | frame_pointer_distance;
+
+    return true;
+  }
+
+  std::intptr_t* sp() { return &m_stack[m_sp_index]; }
+
+  std::array<std::intptr_t, SizeBytes / sizeof(std::intptr_t)> m_stack{};
+  std::intptr_t m_sp_index = 0;
+};
+
 fake_stack<10'000> my_stack{};
+fake_stack_with_relative_frame_pointer<10'000> relative_stack{};
 volatile std::intptr_t final_pc = 0;
 volatile std::intptr_t* final_sp = nullptr;
 
@@ -177,8 +244,7 @@ int
 main()
 {
   dwt_counter_enable();
-  // Set flash accelerator to 1 CPU cycle per instruction
-  *reinterpret_cast<std::uint32_t*>(0x400F'C000) = 0xA;
+  enable_flash_accelerator();
 
   start_cycles = uptime();
   end_cycles = uptime();
@@ -198,13 +264,38 @@ main()
   do {
     pc = *sp;
     sp = reinterpret_cast<std::intptr_t*>(*(sp - 1));
-  } while (1000 <= pc && pc <= 2000);
+  } while (!(1000 <= pc && pc <= 2000));
   end_cycles = uptime();
 
   final_pc = pc;
   final_sp = sp;
 
   iterate_time = (end_cycles - start_cycles) - call_latency;
+
+  // Create relative stack
+  relative_stack.allocate_memory_and_push_sp_and_pc(4, 1001, 4);
+  for (int i = 0; i < 10; i++) {
+    relative_stack.allocate_memory_and_push_sp_and_pc(4, i, 4);
+  }
+
+  pc = 0x0;
+  sp = relative_stack.sp();
+
+  // Search Stack
+  start_cycles = uptime();
+  do {
+    auto offsets = reinterpret_cast<std::intptr_t>(*(sp - 1));
+    auto sp_diff = offsets & 0xFFFF;
+    auto pc_diff = offsets >> 16;
+    pc = *(sp - pc_diff);
+    sp = sp - sp_diff;
+  } while (!(1000 <= pc && pc <= 2000));
+  end_cycles = uptime();
+
+  final_pc = pc;
+  final_sp = sp;
+
+  relative_iterate_time = (end_cycles - start_cycles) - call_latency;
 
   while (true) {
     continue;

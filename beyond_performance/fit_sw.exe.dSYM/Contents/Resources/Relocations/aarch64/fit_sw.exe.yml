@@ -1,0 +1,24 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     fit_sw.exe
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: __Z18dwt_counter_enablev, symObjAddr: 0x0, symBinAddr: 0x100003DA4, symSize: 0x4 }
+  - { offsetInCU: 0x3F, offset: 0x3F, size: 0x8, addend: 0x0, symName: _side_effect, symObjAddr: 0x5F18, symBinAddr: 0x100004018, symSize: 0x0 }
+  - { offsetInCU: 0x6B, offset: 0x6B, size: 0x8, addend: 0x0, symName: _start_cycles, symObjAddr: 0x5F1C, symBinAddr: 0x10000401C, symSize: 0x0 }
+  - { offsetInCU: 0x92, offset: 0x92, size: 0x8, addend: 0x0, symName: _end_cycles, symObjAddr: 0x5F20, symBinAddr: 0x100004020, symSize: 0x0 }
+  - { offsetInCU: 0xA7, offset: 0xA7, size: 0x8, addend: 0x0, symName: _dwt, symObjAddr: 0x208, symBinAddr: 0x100004000, symSize: 0x0 }
+  - { offsetInCU: 0xEF1, offset: 0xEF1, size: 0x8, addend: 0x0, symName: _core, symObjAddr: 0x210, symBinAddr: 0x100004008, symSize: 0x0 }
+  - { offsetInCU: 0xF4A, offset: 0xF4A, size: 0x8, addend: 0x0, symName: __ZN10__cxxabiv119__terminate_handlerE, symObjAddr: 0x218, symBinAddr: 0x100004010, symSize: 0x0 }
+  - { offsetInCU: 0xF6A, offset: 0xF6A, size: 0x8, addend: 0x0, symName: _iterate_time, symObjAddr: 0x5F28, symBinAddr: 0x100004028, symSize: 0x0 }
+  - { offsetInCU: 0xF91, offset: 0xF91, size: 0x8, addend: 0x0, symName: _relative_iterate_time, symObjAddr: 0x5F30, symBinAddr: 0x100004030, symSize: 0x0 }
+  - { offsetInCU: 0xFA6, offset: 0xFA6, size: 0x8, addend: 0x0, symName: _call_latency, symObjAddr: 0x5F38, symBinAddr: 0x100004038, symSize: 0x0 }
+  - { offsetInCU: 0xFBB, offset: 0xFBB, size: 0x8, addend: 0x0, symName: _my_stack, symObjAddr: 0x5F40, symBinAddr: 0x100004040, symSize: 0x0 }
+  - { offsetInCU: 0x1098, offset: 0x1098, size: 0x8, addend: 0x0, symName: _relative_stack, symObjAddr: 0x8658, symBinAddr: 0x100006758, symSize: 0x0 }
+  - { offsetInCU: 0x111E, offset: 0x111E, size: 0x8, addend: 0x0, symName: _final_pc, symObjAddr: 0xAD70, symBinAddr: 0x100008E70, symSize: 0x0 }
+  - { offsetInCU: 0x1138, offset: 0x1138, size: 0x8, addend: 0x0, symName: _final_sp, symObjAddr: 0xAD78, symBinAddr: 0x100008E78, symSize: 0x0 }
+  - { offsetInCU: 0x23F5, offset: 0x23F5, size: 0x8, addend: 0x0, symName: __Z18dwt_counter_enablev, symObjAddr: 0x0, symBinAddr: 0x100003DA4, symSize: 0x4 }
+  - { offsetInCU: 0x240E, offset: 0x240E, size: 0x8, addend: 0x0, symName: __Z24enable_flash_acceleratorv, symObjAddr: 0x4, symBinAddr: 0x100003DA8, symSize: 0x4 }
+  - { offsetInCU: 0x2427, offset: 0x2427, size: 0x8, addend: 0x0, symName: __Z6uptimev, symObjAddr: 0x8, symBinAddr: 0x100003DAC, symSize: 0x8 }
+  - { offsetInCU: 0x2444, offset: 0x2444, size: 0x8, addend: 0x0, symName: __Z9terminatev, symObjAddr: 0x10, symBinAddr: 0x100003DB4, symSize: 0x4 }
+  - { offsetInCU: 0x2556, offset: 0x2556, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x14, symBinAddr: 0x100003DB8, symSize: 0x1F0 }
+...

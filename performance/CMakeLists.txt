@@ -103,5 +103,6 @@ endmacro()
 
 new_exception_source(except)
 new_exception_source(except_experimental)
+new_exception_source(except_experimental2)
 new_exception_ram_source(except_experimental_ram)
 # new_result_source(result)

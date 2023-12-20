@@ -260,6 +260,7 @@ extern "C"
 #endif
 #define SEARCH_ALGORITHM 0
 #if SEARCH_ALGORITHM == 0
+    auto new_start_cycles = uptime();
     int left = 0;
     int right = nrec - 1;
     while (true) {
@@ -277,6 +278,8 @@ extern "C"
         }
         right = n - 1;
       } else if (return_address <= next_fn) {
+        auto new_end_cycles = uptime();
+        upper_bound_cycles = new_end_cycles - new_start_cycles;
         return &table[n];
       } else {
         left = n + 1;
@@ -320,7 +323,7 @@ extern "C"
                                          eit_entry_less_than{});
     auto new_end_cycles = uptime();
     upper_bound_cycles = new_end_cycles - new_start_cycles;
-    return &(*(entry - 1));
+    return entry.base();
 #endif
   }
 
@@ -853,7 +856,7 @@ private:
 int
 funct_group0_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -867,7 +870,7 @@ funct_group0_0()
 int
 funct_group0_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -881,7 +884,7 @@ funct_group0_1()
 int
 funct_group0_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -895,7 +898,7 @@ funct_group0_2()
 int
 funct_group0_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -909,7 +912,7 @@ funct_group0_3()
 int
 funct_group0_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -922,7 +925,7 @@ funct_group0_4()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group0_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -941,7 +944,7 @@ funct_group0_5()
 int
 funct_group1_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -955,7 +958,7 @@ funct_group1_0()
 int
 funct_group1_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -969,7 +972,7 @@ funct_group1_1()
 int
 funct_group1_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -983,7 +986,7 @@ funct_group1_2()
 int
 funct_group1_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -997,7 +1000,7 @@ funct_group1_3()
 int
 funct_group1_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1011,7 +1014,7 @@ funct_group1_4()
 int
 funct_group1_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1025,7 +1028,7 @@ funct_group1_5()
 int
 funct_group1_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1039,7 +1042,7 @@ funct_group1_6()
 int
 funct_group1_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1053,7 +1056,7 @@ funct_group1_7()
 int
 funct_group1_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1067,7 +1070,7 @@ funct_group1_8()
 int
 funct_group1_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1081,7 +1084,7 @@ funct_group1_9()
 int
 funct_group1_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1092,7 +1095,7 @@ funct_group1_10()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group1_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1111,7 +1114,7 @@ funct_group1_11()
 int
 funct_group2_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1125,7 +1128,7 @@ funct_group2_0()
 int
 funct_group2_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1139,7 +1142,7 @@ funct_group2_1()
 int
 funct_group2_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1153,7 +1156,7 @@ funct_group2_2()
 int
 funct_group2_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1167,7 +1170,7 @@ funct_group2_3()
 int
 funct_group2_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1181,7 +1184,7 @@ funct_group2_4()
 int
 funct_group2_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1195,7 +1198,7 @@ funct_group2_5()
 int
 funct_group2_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1209,7 +1212,7 @@ funct_group2_6()
 int
 funct_group2_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1223,7 +1226,7 @@ funct_group2_7()
 int
 funct_group2_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1237,7 +1240,7 @@ funct_group2_8()
 int
 funct_group2_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1251,7 +1254,7 @@ funct_group2_9()
 int
 funct_group2_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1265,7 +1268,7 @@ funct_group2_10()
 int
 funct_group2_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1279,7 +1282,7 @@ funct_group2_11()
 int
 funct_group2_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1293,7 +1296,7 @@ funct_group2_12()
 int
 funct_group2_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1307,7 +1310,7 @@ funct_group2_13()
 int
 funct_group2_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1321,7 +1324,7 @@ funct_group2_14()
 int
 funct_group2_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1335,7 +1338,7 @@ funct_group2_15()
 int
 funct_group2_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1349,7 +1352,7 @@ funct_group2_16()
 int
 funct_group2_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1363,7 +1366,7 @@ funct_group2_17()
 int
 funct_group2_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1377,7 +1380,7 @@ funct_group2_18()
 int
 funct_group2_20();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_19()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1391,7 +1394,7 @@ funct_group2_19()
 int
 funct_group2_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1405,7 +1408,7 @@ funct_group2_20()
 int
 funct_group2_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1419,7 +1422,7 @@ funct_group2_21()
 int
 funct_group2_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1430,7 +1433,7 @@ funct_group2_22()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group2_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1449,7 +1452,7 @@ funct_group2_23()
 int
 funct_group3_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1463,7 +1466,7 @@ funct_group3_0()
 int
 funct_group3_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1477,7 +1480,7 @@ funct_group3_1()
 int
 funct_group3_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1491,7 +1494,7 @@ funct_group3_2()
 int
 funct_group3_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1505,7 +1508,7 @@ funct_group3_3()
 int
 funct_group3_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1519,7 +1522,7 @@ funct_group3_4()
 int
 funct_group3_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1533,7 +1536,7 @@ funct_group3_5()
 int
 funct_group3_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1547,7 +1550,7 @@ funct_group3_6()
 int
 funct_group3_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1561,7 +1564,7 @@ funct_group3_7()
 int
 funct_group3_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1575,7 +1578,7 @@ funct_group3_8()
 int
 funct_group3_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1589,7 +1592,7 @@ funct_group3_9()
 int
 funct_group3_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1603,7 +1606,7 @@ funct_group3_10()
 int
 funct_group3_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1617,7 +1620,7 @@ funct_group3_11()
 int
 funct_group3_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1631,7 +1634,7 @@ funct_group3_12()
 int
 funct_group3_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1645,7 +1648,7 @@ funct_group3_13()
 int
 funct_group3_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1659,7 +1662,7 @@ funct_group3_14()
 int
 funct_group3_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1673,7 +1676,7 @@ funct_group3_15()
 int
 funct_group3_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1687,7 +1690,7 @@ funct_group3_16()
 int
 funct_group3_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1701,7 +1704,7 @@ funct_group3_17()
 int
 funct_group3_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1715,7 +1718,7 @@ funct_group3_18()
 int
 funct_group3_20();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_19()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1729,7 +1732,7 @@ funct_group3_19()
 int
 funct_group3_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1743,7 +1746,7 @@ funct_group3_20()
 int
 funct_group3_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1757,7 +1760,7 @@ funct_group3_21()
 int
 funct_group3_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1771,7 +1774,7 @@ funct_group3_22()
 int
 funct_group3_24();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1785,7 +1788,7 @@ funct_group3_23()
 int
 funct_group3_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1799,7 +1802,7 @@ funct_group3_24()
 int
 funct_group3_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1813,7 +1816,7 @@ funct_group3_25()
 int
 funct_group3_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1827,7 +1830,7 @@ funct_group3_26()
 int
 funct_group3_28();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_27()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1841,7 +1844,7 @@ funct_group3_27()
 int
 funct_group3_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1855,7 +1858,7 @@ funct_group3_28()
 int
 funct_group3_30();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_29()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1869,7 +1872,7 @@ funct_group3_29()
 int
 funct_group3_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1883,7 +1886,7 @@ funct_group3_30()
 int
 funct_group3_32();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_31()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1897,7 +1900,7 @@ funct_group3_31()
 int
 funct_group3_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1911,7 +1914,7 @@ funct_group3_32()
 int
 funct_group3_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1925,7 +1928,7 @@ funct_group3_33()
 int
 funct_group3_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1939,7 +1942,7 @@ funct_group3_34()
 int
 funct_group3_36();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_35()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1953,7 +1956,7 @@ funct_group3_35()
 int
 funct_group3_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1967,7 +1970,7 @@ funct_group3_36()
 int
 funct_group3_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1981,7 +1984,7 @@ funct_group3_37()
 int
 funct_group3_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -1995,7 +1998,7 @@ funct_group3_38()
 int
 funct_group3_40();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_39()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2009,7 +2012,7 @@ funct_group3_39()
 int
 funct_group3_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2023,7 +2026,7 @@ funct_group3_40()
 int
 funct_group3_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2037,7 +2040,7 @@ funct_group3_41()
 int
 funct_group3_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2051,7 +2054,7 @@ funct_group3_42()
 int
 funct_group3_44();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_43()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2065,7 +2068,7 @@ funct_group3_43()
 int
 funct_group3_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2079,7 +2082,7 @@ funct_group3_44()
 int
 funct_group3_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2093,7 +2096,7 @@ funct_group3_45()
 int
 funct_group3_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2104,7 +2107,7 @@ funct_group3_46()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group3_47()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2123,7 +2126,7 @@ funct_group3_47()
 int
 funct_group4_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2137,7 +2140,7 @@ funct_group4_0()
 int
 funct_group4_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2151,7 +2154,7 @@ funct_group4_1()
 int
 funct_group4_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2165,7 +2168,7 @@ funct_group4_2()
 int
 funct_group4_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2179,7 +2182,7 @@ funct_group4_3()
 int
 funct_group4_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2193,7 +2196,7 @@ funct_group4_4()
 int
 funct_group4_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2207,7 +2210,7 @@ funct_group4_5()
 int
 funct_group4_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2221,7 +2224,7 @@ funct_group4_6()
 int
 funct_group4_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2235,7 +2238,7 @@ funct_group4_7()
 int
 funct_group4_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2249,7 +2252,7 @@ funct_group4_8()
 int
 funct_group4_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2263,7 +2266,7 @@ funct_group4_9()
 int
 funct_group4_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2277,7 +2280,7 @@ funct_group4_10()
 int
 funct_group4_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2291,7 +2294,7 @@ funct_group4_11()
 int
 funct_group4_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2305,7 +2308,7 @@ funct_group4_12()
 int
 funct_group4_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2319,7 +2322,7 @@ funct_group4_13()
 int
 funct_group4_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2333,7 +2336,7 @@ funct_group4_14()
 int
 funct_group4_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2347,7 +2350,7 @@ funct_group4_15()
 int
 funct_group4_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2361,7 +2364,7 @@ funct_group4_16()
 int
 funct_group4_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2375,7 +2378,7 @@ funct_group4_17()
 int
 funct_group4_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2389,7 +2392,7 @@ funct_group4_18()
 int
 funct_group4_20();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_19()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2403,7 +2406,7 @@ funct_group4_19()
 int
 funct_group4_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2417,7 +2420,7 @@ funct_group4_20()
 int
 funct_group4_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2431,7 +2434,7 @@ funct_group4_21()
 int
 funct_group4_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2445,7 +2448,7 @@ funct_group4_22()
 int
 funct_group4_24();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2459,7 +2462,7 @@ funct_group4_23()
 int
 funct_group4_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2473,7 +2476,7 @@ funct_group4_24()
 int
 funct_group4_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2487,7 +2490,7 @@ funct_group4_25()
 int
 funct_group4_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2501,7 +2504,7 @@ funct_group4_26()
 int
 funct_group4_28();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_27()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2515,7 +2518,7 @@ funct_group4_27()
 int
 funct_group4_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2529,7 +2532,7 @@ funct_group4_28()
 int
 funct_group4_30();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_29()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2543,7 +2546,7 @@ funct_group4_29()
 int
 funct_group4_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2557,7 +2560,7 @@ funct_group4_30()
 int
 funct_group4_32();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_31()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2571,7 +2574,7 @@ funct_group4_31()
 int
 funct_group4_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2585,7 +2588,7 @@ funct_group4_32()
 int
 funct_group4_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2599,7 +2602,7 @@ funct_group4_33()
 int
 funct_group4_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2613,7 +2616,7 @@ funct_group4_34()
 int
 funct_group4_36();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_35()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2627,7 +2630,7 @@ funct_group4_35()
 int
 funct_group4_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2641,7 +2644,7 @@ funct_group4_36()
 int
 funct_group4_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2655,7 +2658,7 @@ funct_group4_37()
 int
 funct_group4_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2669,7 +2672,7 @@ funct_group4_38()
 int
 funct_group4_40();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_39()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2683,7 +2686,7 @@ funct_group4_39()
 int
 funct_group4_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2697,7 +2700,7 @@ funct_group4_40()
 int
 funct_group4_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2711,7 +2714,7 @@ funct_group4_41()
 int
 funct_group4_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2725,7 +2728,7 @@ funct_group4_42()
 int
 funct_group4_44();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_43()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2739,7 +2742,7 @@ funct_group4_43()
 int
 funct_group4_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2753,7 +2756,7 @@ funct_group4_44()
 int
 funct_group4_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2767,7 +2770,7 @@ funct_group4_45()
 int
 funct_group4_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2781,7 +2784,7 @@ funct_group4_46()
 int
 funct_group4_48();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_47()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2795,7 +2798,7 @@ funct_group4_47()
 int
 funct_group4_49();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_48()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2809,7 +2812,7 @@ funct_group4_48()
 int
 funct_group4_50();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_49()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2823,7 +2826,7 @@ funct_group4_49()
 int
 funct_group4_51();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_50()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2837,7 +2840,7 @@ funct_group4_50()
 int
 funct_group4_52();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_51()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2851,7 +2854,7 @@ funct_group4_51()
 int
 funct_group4_53();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_52()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2865,7 +2868,7 @@ funct_group4_52()
 int
 funct_group4_54();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_53()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2879,7 +2882,7 @@ funct_group4_53()
 int
 funct_group4_55();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_54()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2893,7 +2896,7 @@ funct_group4_54()
 int
 funct_group4_56();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_55()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2907,7 +2910,7 @@ funct_group4_55()
 int
 funct_group4_57();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_56()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2921,7 +2924,7 @@ funct_group4_56()
 int
 funct_group4_58();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_57()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2935,7 +2938,7 @@ funct_group4_57()
 int
 funct_group4_59();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_58()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2949,7 +2952,7 @@ funct_group4_58()
 int
 funct_group4_60();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_59()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2963,7 +2966,7 @@ funct_group4_59()
 int
 funct_group4_61();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_60()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2977,7 +2980,7 @@ funct_group4_60()
 int
 funct_group4_62();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_61()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -2991,7 +2994,7 @@ funct_group4_61()
 int
 funct_group4_63();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_62()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3005,7 +3008,7 @@ funct_group4_62()
 int
 funct_group4_64();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_63()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3019,7 +3022,7 @@ funct_group4_63()
 int
 funct_group4_65();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_64()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3033,7 +3036,7 @@ funct_group4_64()
 int
 funct_group4_66();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_65()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3047,7 +3050,7 @@ funct_group4_65()
 int
 funct_group4_67();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_66()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3061,7 +3064,7 @@ funct_group4_66()
 int
 funct_group4_68();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_67()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3075,7 +3078,7 @@ funct_group4_67()
 int
 funct_group4_69();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_68()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3089,7 +3092,7 @@ funct_group4_68()
 int
 funct_group4_70();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_69()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3103,7 +3106,7 @@ funct_group4_69()
 int
 funct_group4_71();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_70()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3117,7 +3120,7 @@ funct_group4_70()
 int
 funct_group4_72();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_71()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3131,7 +3134,7 @@ funct_group4_71()
 int
 funct_group4_73();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_72()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3145,7 +3148,7 @@ funct_group4_72()
 int
 funct_group4_74();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_73()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3159,7 +3162,7 @@ funct_group4_73()
 int
 funct_group4_75();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_74()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3173,7 +3176,7 @@ funct_group4_74()
 int
 funct_group4_76();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_75()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3187,7 +3190,7 @@ funct_group4_75()
 int
 funct_group4_77();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_76()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3201,7 +3204,7 @@ funct_group4_76()
 int
 funct_group4_78();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_77()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3215,7 +3218,7 @@ funct_group4_77()
 int
 funct_group4_79();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_78()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3229,7 +3232,7 @@ funct_group4_78()
 int
 funct_group4_80();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_79()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3243,7 +3246,7 @@ funct_group4_79()
 int
 funct_group4_81();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_80()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3257,7 +3260,7 @@ funct_group4_80()
 int
 funct_group4_82();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_81()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3271,7 +3274,7 @@ funct_group4_81()
 int
 funct_group4_83();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_82()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3285,7 +3288,7 @@ funct_group4_82()
 int
 funct_group4_84();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_83()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3299,7 +3302,7 @@ funct_group4_83()
 int
 funct_group4_85();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_84()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3313,7 +3316,7 @@ funct_group4_84()
 int
 funct_group4_86();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_85()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3327,7 +3330,7 @@ funct_group4_85()
 int
 funct_group4_87();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_86()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3341,7 +3344,7 @@ funct_group4_86()
 int
 funct_group4_88();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_87()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3355,7 +3358,7 @@ funct_group4_87()
 int
 funct_group4_89();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_88()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3369,7 +3372,7 @@ funct_group4_88()
 int
 funct_group4_90();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_89()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3383,7 +3386,7 @@ funct_group4_89()
 int
 funct_group4_91();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_90()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3397,7 +3400,7 @@ funct_group4_90()
 int
 funct_group4_92();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_91()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3411,7 +3414,7 @@ funct_group4_91()
 int
 funct_group4_93();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_92()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3425,7 +3428,7 @@ funct_group4_92()
 int
 funct_group4_94();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_93()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3439,7 +3442,7 @@ funct_group4_93()
 int
 funct_group4_95();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_94()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3450,7 +3453,7 @@ funct_group4_94()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group4_95()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3469,7 +3472,7 @@ funct_group4_95()
 int
 funct_group5_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3483,7 +3486,7 @@ funct_group5_0()
 int
 funct_group5_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3497,7 +3500,7 @@ funct_group5_1()
 int
 funct_group5_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3511,7 +3514,7 @@ funct_group5_2()
 int
 funct_group5_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3525,7 +3528,7 @@ funct_group5_3()
 int
 funct_group5_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3536,7 +3539,7 @@ funct_group5_4()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group5_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3555,7 +3558,7 @@ funct_group5_5()
 int
 funct_group6_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3569,7 +3572,7 @@ funct_group6_0()
 int
 funct_group6_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3583,7 +3586,7 @@ funct_group6_1()
 int
 funct_group6_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3597,7 +3600,7 @@ funct_group6_2()
 int
 funct_group6_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3611,7 +3614,7 @@ funct_group6_3()
 int
 funct_group6_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3625,7 +3628,7 @@ funct_group6_4()
 int
 funct_group6_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3639,7 +3642,7 @@ funct_group6_5()
 int
 funct_group6_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3653,7 +3656,7 @@ funct_group6_6()
 int
 funct_group6_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3667,7 +3670,7 @@ funct_group6_7()
 int
 funct_group6_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3695,7 +3698,7 @@ funct_group6_9()
 int
 funct_group6_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3706,7 +3709,7 @@ funct_group6_10()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group6_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3725,7 +3728,7 @@ funct_group6_11()
 int
 funct_group7_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3739,7 +3742,7 @@ funct_group7_0()
 int
 funct_group7_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3753,7 +3756,7 @@ funct_group7_1()
 int
 funct_group7_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3767,7 +3770,7 @@ funct_group7_2()
 int
 funct_group7_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3781,7 +3784,7 @@ funct_group7_3()
 int
 funct_group7_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3795,7 +3798,7 @@ funct_group7_4()
 int
 funct_group7_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3809,7 +3812,7 @@ funct_group7_5()
 int
 funct_group7_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3823,7 +3826,7 @@ funct_group7_6()
 int
 funct_group7_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3837,7 +3840,7 @@ funct_group7_7()
 int
 funct_group7_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3865,7 +3868,7 @@ funct_group7_9()
 int
 funct_group7_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3879,7 +3882,7 @@ funct_group7_10()
 int
 funct_group7_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3893,7 +3896,7 @@ funct_group7_11()
 int
 funct_group7_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3907,7 +3910,7 @@ funct_group7_12()
 int
 funct_group7_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3921,7 +3924,7 @@ funct_group7_13()
 int
 funct_group7_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3935,7 +3938,7 @@ funct_group7_14()
 int
 funct_group7_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3949,7 +3952,7 @@ funct_group7_15()
 int
 funct_group7_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3963,7 +3966,7 @@ funct_group7_16()
 int
 funct_group7_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -3977,7 +3980,7 @@ funct_group7_17()
 int
 funct_group7_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4005,7 +4008,7 @@ funct_group7_19()
 int
 funct_group7_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4019,7 +4022,7 @@ funct_group7_20()
 int
 funct_group7_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4033,7 +4036,7 @@ funct_group7_21()
 int
 funct_group7_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4044,7 +4047,7 @@ funct_group7_22()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group7_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4063,7 +4066,7 @@ funct_group7_23()
 int
 funct_group8_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4077,7 +4080,7 @@ funct_group8_0()
 int
 funct_group8_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4091,7 +4094,7 @@ funct_group8_1()
 int
 funct_group8_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4105,7 +4108,7 @@ funct_group8_2()
 int
 funct_group8_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4119,7 +4122,7 @@ funct_group8_3()
 int
 funct_group8_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4133,7 +4136,7 @@ funct_group8_4()
 int
 funct_group8_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4147,7 +4150,7 @@ funct_group8_5()
 int
 funct_group8_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4161,7 +4164,7 @@ funct_group8_6()
 int
 funct_group8_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4175,7 +4178,7 @@ funct_group8_7()
 int
 funct_group8_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4203,7 +4206,7 @@ funct_group8_9()
 int
 funct_group8_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4217,7 +4220,7 @@ funct_group8_10()
 int
 funct_group8_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4231,7 +4234,7 @@ funct_group8_11()
 int
 funct_group8_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4245,7 +4248,7 @@ funct_group8_12()
 int
 funct_group8_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4259,7 +4262,7 @@ funct_group8_13()
 int
 funct_group8_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4273,7 +4276,7 @@ funct_group8_14()
 int
 funct_group8_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4287,7 +4290,7 @@ funct_group8_15()
 int
 funct_group8_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4301,7 +4304,7 @@ funct_group8_16()
 int
 funct_group8_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4315,7 +4318,7 @@ funct_group8_17()
 int
 funct_group8_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4343,7 +4346,7 @@ funct_group8_19()
 int
 funct_group8_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4357,7 +4360,7 @@ funct_group8_20()
 int
 funct_group8_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4371,7 +4374,7 @@ funct_group8_21()
 int
 funct_group8_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4385,7 +4388,7 @@ funct_group8_22()
 int
 funct_group8_24();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4399,7 +4402,7 @@ funct_group8_23()
 int
 funct_group8_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4413,7 +4416,7 @@ funct_group8_24()
 int
 funct_group8_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4427,7 +4430,7 @@ funct_group8_25()
 int
 funct_group8_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4441,7 +4444,7 @@ funct_group8_26()
 int
 funct_group8_28();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_27()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4455,7 +4458,7 @@ funct_group8_27()
 int
 funct_group8_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4483,7 +4486,7 @@ funct_group8_29()
 int
 funct_group8_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4497,7 +4500,7 @@ funct_group8_30()
 int
 funct_group8_32();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_31()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4511,7 +4514,7 @@ funct_group8_31()
 int
 funct_group8_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4525,7 +4528,7 @@ funct_group8_32()
 int
 funct_group8_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4539,7 +4542,7 @@ funct_group8_33()
 int
 funct_group8_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4553,7 +4556,7 @@ funct_group8_34()
 int
 funct_group8_36();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_35()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4567,7 +4570,7 @@ funct_group8_35()
 int
 funct_group8_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4581,7 +4584,7 @@ funct_group8_36()
 int
 funct_group8_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4595,7 +4598,7 @@ funct_group8_37()
 int
 funct_group8_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4623,7 +4626,7 @@ funct_group8_39()
 int
 funct_group8_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4637,7 +4640,7 @@ funct_group8_40()
 int
 funct_group8_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4651,7 +4654,7 @@ funct_group8_41()
 int
 funct_group8_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4665,7 +4668,7 @@ funct_group8_42()
 int
 funct_group8_44();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_43()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4679,7 +4682,7 @@ funct_group8_43()
 int
 funct_group8_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4693,7 +4696,7 @@ funct_group8_44()
 int
 funct_group8_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4707,7 +4710,7 @@ funct_group8_45()
 int
 funct_group8_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4718,7 +4721,7 @@ funct_group8_46()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group8_47()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4737,7 +4740,7 @@ funct_group8_47()
 int
 funct_group9_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4751,7 +4754,7 @@ funct_group9_0()
 int
 funct_group9_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4765,7 +4768,7 @@ funct_group9_1()
 int
 funct_group9_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4779,7 +4782,7 @@ funct_group9_2()
 int
 funct_group9_4();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_3()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4793,7 +4796,7 @@ funct_group9_3()
 int
 funct_group9_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4807,7 +4810,7 @@ funct_group9_4()
 int
 funct_group9_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4821,7 +4824,7 @@ funct_group9_5()
 int
 funct_group9_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4835,7 +4838,7 @@ funct_group9_6()
 int
 funct_group9_8();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_7()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4849,7 +4852,7 @@ funct_group9_7()
 int
 funct_group9_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4877,7 +4880,7 @@ funct_group9_9()
 int
 funct_group9_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4891,7 +4894,7 @@ funct_group9_10()
 int
 funct_group9_12();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_11()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4905,7 +4908,7 @@ funct_group9_11()
 int
 funct_group9_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4919,7 +4922,7 @@ funct_group9_12()
 int
 funct_group9_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4933,7 +4936,7 @@ funct_group9_13()
 int
 funct_group9_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4947,7 +4950,7 @@ funct_group9_14()
 int
 funct_group9_16();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_15()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4961,7 +4964,7 @@ funct_group9_15()
 int
 funct_group9_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4975,7 +4978,7 @@ funct_group9_16()
 int
 funct_group9_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -4989,7 +4992,7 @@ funct_group9_17()
 int
 funct_group9_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5017,7 +5020,7 @@ funct_group9_19()
 int
 funct_group9_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5031,7 +5034,7 @@ funct_group9_20()
 int
 funct_group9_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5045,7 +5048,7 @@ funct_group9_21()
 int
 funct_group9_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5059,7 +5062,7 @@ funct_group9_22()
 int
 funct_group9_24();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_23()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5073,7 +5076,7 @@ funct_group9_23()
 int
 funct_group9_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5087,7 +5090,7 @@ funct_group9_24()
 int
 funct_group9_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5101,7 +5104,7 @@ funct_group9_25()
 int
 funct_group9_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5115,7 +5118,7 @@ funct_group9_26()
 int
 funct_group9_28();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_27()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5129,7 +5132,7 @@ funct_group9_27()
 int
 funct_group9_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5157,7 +5160,7 @@ funct_group9_29()
 int
 funct_group9_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5171,7 +5174,7 @@ funct_group9_30()
 int
 funct_group9_32();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_31()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5185,7 +5188,7 @@ funct_group9_31()
 int
 funct_group9_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5199,7 +5202,7 @@ funct_group9_32()
 int
 funct_group9_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5213,7 +5216,7 @@ funct_group9_33()
 int
 funct_group9_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5227,7 +5230,7 @@ funct_group9_34()
 int
 funct_group9_36();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_35()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5241,7 +5244,7 @@ funct_group9_35()
 int
 funct_group9_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5255,7 +5258,7 @@ funct_group9_36()
 int
 funct_group9_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5269,7 +5272,7 @@ funct_group9_37()
 int
 funct_group9_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5297,7 +5300,7 @@ funct_group9_39()
 int
 funct_group9_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5311,7 +5314,7 @@ funct_group9_40()
 int
 funct_group9_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5325,7 +5328,7 @@ funct_group9_41()
 int
 funct_group9_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5339,7 +5342,7 @@ funct_group9_42()
 int
 funct_group9_44();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_43()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5353,7 +5356,7 @@ funct_group9_43()
 int
 funct_group9_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5367,7 +5370,7 @@ funct_group9_44()
 int
 funct_group9_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5381,7 +5384,7 @@ funct_group9_45()
 int
 funct_group9_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5395,7 +5398,7 @@ funct_group9_46()
 int
 funct_group9_48();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_47()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5409,7 +5412,7 @@ funct_group9_47()
 int
 funct_group9_49();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_48()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5437,7 +5440,7 @@ funct_group9_49()
 int
 funct_group9_51();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_50()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5451,7 +5454,7 @@ funct_group9_50()
 int
 funct_group9_52();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_51()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5465,7 +5468,7 @@ funct_group9_51()
 int
 funct_group9_53();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_52()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5479,7 +5482,7 @@ funct_group9_52()
 int
 funct_group9_54();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_53()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5493,7 +5496,7 @@ funct_group9_53()
 int
 funct_group9_55();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_54()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5507,7 +5510,7 @@ funct_group9_54()
 int
 funct_group9_56();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_55()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5521,7 +5524,7 @@ funct_group9_55()
 int
 funct_group9_57();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_56()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5535,7 +5538,7 @@ funct_group9_56()
 int
 funct_group9_58();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_57()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5549,7 +5552,7 @@ funct_group9_57()
 int
 funct_group9_59();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_58()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5577,7 +5580,7 @@ funct_group9_59()
 int
 funct_group9_61();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_60()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5591,7 +5594,7 @@ funct_group9_60()
 int
 funct_group9_62();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_61()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5605,7 +5608,7 @@ funct_group9_61()
 int
 funct_group9_63();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_62()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5619,7 +5622,7 @@ funct_group9_62()
 int
 funct_group9_64();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_63()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5633,7 +5636,7 @@ funct_group9_63()
 int
 funct_group9_65();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_64()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5647,7 +5650,7 @@ funct_group9_64()
 int
 funct_group9_66();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_65()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5661,7 +5664,7 @@ funct_group9_65()
 int
 funct_group9_67();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_66()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5675,7 +5678,7 @@ funct_group9_66()
 int
 funct_group9_68();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_67()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5689,7 +5692,7 @@ funct_group9_67()
 int
 funct_group9_69();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_68()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5717,7 +5720,7 @@ funct_group9_69()
 int
 funct_group9_71();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_70()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5731,7 +5734,7 @@ funct_group9_70()
 int
 funct_group9_72();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_71()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5745,7 +5748,7 @@ funct_group9_71()
 int
 funct_group9_73();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_72()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5759,7 +5762,7 @@ funct_group9_72()
 int
 funct_group9_74();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_73()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5773,7 +5776,7 @@ funct_group9_73()
 int
 funct_group9_75();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_74()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5787,7 +5790,7 @@ funct_group9_74()
 int
 funct_group9_76();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_75()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5801,7 +5804,7 @@ funct_group9_75()
 int
 funct_group9_77();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_76()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5815,7 +5818,7 @@ funct_group9_76()
 int
 funct_group9_78();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_77()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5829,7 +5832,7 @@ funct_group9_77()
 int
 funct_group9_79();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_78()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5857,7 +5860,7 @@ funct_group9_79()
 int
 funct_group9_81();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_80()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5871,7 +5874,7 @@ funct_group9_80()
 int
 funct_group9_82();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_81()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5885,7 +5888,7 @@ funct_group9_81()
 int
 funct_group9_83();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_82()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5899,7 +5902,7 @@ funct_group9_82()
 int
 funct_group9_84();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_83()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5913,7 +5916,7 @@ funct_group9_83()
 int
 funct_group9_85();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_84()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5927,7 +5930,7 @@ funct_group9_84()
 int
 funct_group9_86();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_85()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5941,7 +5944,7 @@ funct_group9_85()
 int
 funct_group9_87();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_86()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5955,7 +5958,7 @@ funct_group9_86()
 int
 funct_group9_88();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_87()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5969,7 +5972,7 @@ funct_group9_87()
 int
 funct_group9_89();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_88()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -5997,7 +6000,7 @@ funct_group9_89()
 int
 funct_group9_91();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_90()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6011,7 +6014,7 @@ funct_group9_90()
 int
 funct_group9_92();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_91()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6025,7 +6028,7 @@ funct_group9_91()
 int
 funct_group9_93();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_92()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6039,7 +6042,7 @@ funct_group9_92()
 int
 funct_group9_94();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_93()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6053,7 +6056,7 @@ funct_group9_93()
 int
 funct_group9_95();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_94()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6064,7 +6067,7 @@ funct_group9_94()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group9_95()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6083,7 +6086,7 @@ funct_group9_95()
 int
 funct_group10_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group10_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6097,7 +6100,7 @@ funct_group10_0()
 int
 funct_group10_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group10_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6111,7 +6114,7 @@ funct_group10_1()
 int
 funct_group10_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group10_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6139,7 +6142,7 @@ funct_group10_3()
 int
 funct_group10_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group10_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6150,7 +6153,7 @@ funct_group10_4()
   return side_effect;
 }
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group10_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6169,7 +6172,7 @@ funct_group10_5()
 int
 funct_group11_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6183,7 +6186,7 @@ funct_group11_0()
 int
 funct_group11_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6197,7 +6200,7 @@ funct_group11_1()
 int
 funct_group11_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6225,7 +6228,7 @@ funct_group11_3()
 int
 funct_group11_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6239,7 +6242,7 @@ funct_group11_4()
 int
 funct_group11_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6253,7 +6256,7 @@ funct_group11_5()
 int
 funct_group11_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6281,7 +6284,7 @@ funct_group11_7()
 int
 funct_group11_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6295,7 +6298,7 @@ funct_group11_8()
 int
 funct_group11_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6309,7 +6312,7 @@ funct_group11_9()
 int
 funct_group11_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group11_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6339,7 +6342,7 @@ funct_group11_11()
 int
 funct_group12_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6353,7 +6356,7 @@ funct_group12_0()
 int
 funct_group12_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6367,7 +6370,7 @@ funct_group12_1()
 int
 funct_group12_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6395,7 +6398,7 @@ funct_group12_3()
 int
 funct_group12_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6409,7 +6412,7 @@ funct_group12_4()
 int
 funct_group12_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6423,7 +6426,7 @@ funct_group12_5()
 int
 funct_group12_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6451,7 +6454,7 @@ funct_group12_7()
 int
 funct_group12_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6465,7 +6468,7 @@ funct_group12_8()
 int
 funct_group12_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6479,7 +6482,7 @@ funct_group12_9()
 int
 funct_group12_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6507,7 +6510,7 @@ funct_group12_11()
 int
 funct_group12_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6521,7 +6524,7 @@ funct_group12_12()
 int
 funct_group12_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6535,7 +6538,7 @@ funct_group12_13()
 int
 funct_group12_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6563,7 +6566,7 @@ funct_group12_15()
 int
 funct_group12_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6577,7 +6580,7 @@ funct_group12_16()
 int
 funct_group12_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6591,7 +6594,7 @@ funct_group12_17()
 int
 funct_group12_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6619,7 +6622,7 @@ funct_group12_19()
 int
 funct_group12_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6633,7 +6636,7 @@ funct_group12_20()
 int
 funct_group12_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6647,7 +6650,7 @@ funct_group12_21()
 int
 funct_group12_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group12_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6677,7 +6680,7 @@ funct_group12_23()
 int
 funct_group13_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6691,7 +6694,7 @@ funct_group13_0()
 int
 funct_group13_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6705,7 +6708,7 @@ funct_group13_1()
 int
 funct_group13_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6733,7 +6736,7 @@ funct_group13_3()
 int
 funct_group13_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6747,7 +6750,7 @@ funct_group13_4()
 int
 funct_group13_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6761,7 +6764,7 @@ funct_group13_5()
 int
 funct_group13_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6789,7 +6792,7 @@ funct_group13_7()
 int
 funct_group13_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6803,7 +6806,7 @@ funct_group13_8()
 int
 funct_group13_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6817,7 +6820,7 @@ funct_group13_9()
 int
 funct_group13_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6845,7 +6848,7 @@ funct_group13_11()
 int
 funct_group13_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6859,7 +6862,7 @@ funct_group13_12()
 int
 funct_group13_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6873,7 +6876,7 @@ funct_group13_13()
 int
 funct_group13_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6901,7 +6904,7 @@ funct_group13_15()
 int
 funct_group13_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6915,7 +6918,7 @@ funct_group13_16()
 int
 funct_group13_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6929,7 +6932,7 @@ funct_group13_17()
 int
 funct_group13_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6957,7 +6960,7 @@ funct_group13_19()
 int
 funct_group13_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6971,7 +6974,7 @@ funct_group13_20()
 int
 funct_group13_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -6985,7 +6988,7 @@ funct_group13_21()
 int
 funct_group13_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7013,7 +7016,7 @@ funct_group13_23()
 int
 funct_group13_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7027,7 +7030,7 @@ funct_group13_24()
 int
 funct_group13_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7041,7 +7044,7 @@ funct_group13_25()
 int
 funct_group13_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7069,7 +7072,7 @@ funct_group13_27()
 int
 funct_group13_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7083,7 +7086,7 @@ funct_group13_28()
 int
 funct_group13_30();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_29()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7097,7 +7100,7 @@ funct_group13_29()
 int
 funct_group13_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7125,7 +7128,7 @@ funct_group13_31()
 int
 funct_group13_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7139,7 +7142,7 @@ funct_group13_32()
 int
 funct_group13_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7153,7 +7156,7 @@ funct_group13_33()
 int
 funct_group13_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7181,7 +7184,7 @@ funct_group13_35()
 int
 funct_group13_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7195,7 +7198,7 @@ funct_group13_36()
 int
 funct_group13_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7209,7 +7212,7 @@ funct_group13_37()
 int
 funct_group13_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7237,7 +7240,7 @@ funct_group13_39()
 int
 funct_group13_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7251,7 +7254,7 @@ funct_group13_40()
 int
 funct_group13_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7265,7 +7268,7 @@ funct_group13_41()
 int
 funct_group13_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7293,7 +7296,7 @@ funct_group13_43()
 int
 funct_group13_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7307,7 +7310,7 @@ funct_group13_44()
 int
 funct_group13_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7321,7 +7324,7 @@ funct_group13_45()
 int
 funct_group13_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group13_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7351,7 +7354,7 @@ funct_group13_47()
 int
 funct_group14_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7365,7 +7368,7 @@ funct_group14_0()
 int
 funct_group14_2();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_1()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7379,7 +7382,7 @@ funct_group14_1()
 int
 funct_group14_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7407,7 +7410,7 @@ funct_group14_3()
 int
 funct_group14_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7421,7 +7424,7 @@ funct_group14_4()
 int
 funct_group14_6();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_5()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7435,7 +7438,7 @@ funct_group14_5()
 int
 funct_group14_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7463,7 +7466,7 @@ funct_group14_7()
 int
 funct_group14_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7477,7 +7480,7 @@ funct_group14_8()
 int
 funct_group14_10();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_9()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7491,7 +7494,7 @@ funct_group14_9()
 int
 funct_group14_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7519,7 +7522,7 @@ funct_group14_11()
 int
 funct_group14_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7533,7 +7536,7 @@ funct_group14_12()
 int
 funct_group14_14();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_13()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7547,7 +7550,7 @@ funct_group14_13()
 int
 funct_group14_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7575,7 +7578,7 @@ funct_group14_15()
 int
 funct_group14_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7589,7 +7592,7 @@ funct_group14_16()
 int
 funct_group14_18();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_17()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7603,7 +7606,7 @@ funct_group14_17()
 int
 funct_group14_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7631,7 +7634,7 @@ funct_group14_19()
 int
 funct_group14_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7645,7 +7648,7 @@ funct_group14_20()
 int
 funct_group14_22();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_21()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7659,7 +7662,7 @@ funct_group14_21()
 int
 funct_group14_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7687,7 +7690,7 @@ funct_group14_23()
 int
 funct_group14_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7701,7 +7704,7 @@ funct_group14_24()
 int
 funct_group14_26();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_25()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7715,7 +7718,7 @@ funct_group14_25()
 int
 funct_group14_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7743,7 +7746,7 @@ funct_group14_27()
 int
 funct_group14_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7757,7 +7760,7 @@ funct_group14_28()
 int
 funct_group14_30();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_29()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7771,7 +7774,7 @@ funct_group14_29()
 int
 funct_group14_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7799,7 +7802,7 @@ funct_group14_31()
 int
 funct_group14_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7813,7 +7816,7 @@ funct_group14_32()
 int
 funct_group14_34();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_33()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7827,7 +7830,7 @@ funct_group14_33()
 int
 funct_group14_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7855,7 +7858,7 @@ funct_group14_35()
 int
 funct_group14_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7869,7 +7872,7 @@ funct_group14_36()
 int
 funct_group14_38();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_37()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7883,7 +7886,7 @@ funct_group14_37()
 int
 funct_group14_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7911,7 +7914,7 @@ funct_group14_39()
 int
 funct_group14_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7925,7 +7928,7 @@ funct_group14_40()
 int
 funct_group14_42();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_41()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7939,7 +7942,7 @@ funct_group14_41()
 int
 funct_group14_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7967,7 +7970,7 @@ funct_group14_43()
 int
 funct_group14_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7981,7 +7984,7 @@ funct_group14_44()
 int
 funct_group14_46();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_45()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -7995,7 +7998,7 @@ funct_group14_45()
 int
 funct_group14_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8023,7 +8026,7 @@ funct_group14_47()
 int
 funct_group14_49();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_48()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8037,7 +8040,7 @@ funct_group14_48()
 int
 funct_group14_50();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_49()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8051,7 +8054,7 @@ funct_group14_49()
 int
 funct_group14_51();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_50()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8079,7 +8082,7 @@ funct_group14_51()
 int
 funct_group14_53();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_52()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8093,7 +8096,7 @@ funct_group14_52()
 int
 funct_group14_54();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_53()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8107,7 +8110,7 @@ funct_group14_53()
 int
 funct_group14_55();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_54()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8135,7 +8138,7 @@ funct_group14_55()
 int
 funct_group14_57();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_56()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8149,7 +8152,7 @@ funct_group14_56()
 int
 funct_group14_58();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_57()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8163,7 +8166,7 @@ funct_group14_57()
 int
 funct_group14_59();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_58()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8191,7 +8194,7 @@ funct_group14_59()
 int
 funct_group14_61();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_60()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8205,7 +8208,7 @@ funct_group14_60()
 int
 funct_group14_62();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_61()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8219,7 +8222,7 @@ funct_group14_61()
 int
 funct_group14_63();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_62()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8247,7 +8250,7 @@ funct_group14_63()
 int
 funct_group14_65();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_64()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8261,7 +8264,7 @@ funct_group14_64()
 int
 funct_group14_66();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_65()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8275,7 +8278,7 @@ funct_group14_65()
 int
 funct_group14_67();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_66()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8303,7 +8306,7 @@ funct_group14_67()
 int
 funct_group14_69();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_68()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8317,7 +8320,7 @@ funct_group14_68()
 int
 funct_group14_70();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_69()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8331,7 +8334,7 @@ funct_group14_69()
 int
 funct_group14_71();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_70()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8359,7 +8362,7 @@ funct_group14_71()
 int
 funct_group14_73();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_72()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8373,7 +8376,7 @@ funct_group14_72()
 int
 funct_group14_74();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_73()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8387,7 +8390,7 @@ funct_group14_73()
 int
 funct_group14_75();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_74()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8415,7 +8418,7 @@ funct_group14_75()
 int
 funct_group14_77();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_76()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8429,7 +8432,7 @@ funct_group14_76()
 int
 funct_group14_78();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_77()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8443,7 +8446,7 @@ funct_group14_77()
 int
 funct_group14_79();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_78()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8471,7 +8474,7 @@ funct_group14_79()
 int
 funct_group14_81();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_80()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8485,7 +8488,7 @@ funct_group14_80()
 int
 funct_group14_82();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_81()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8499,7 +8502,7 @@ funct_group14_81()
 int
 funct_group14_83();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_82()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8527,7 +8530,7 @@ funct_group14_83()
 int
 funct_group14_85();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_84()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8541,7 +8544,7 @@ funct_group14_84()
 int
 funct_group14_86();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_85()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8555,7 +8558,7 @@ funct_group14_85()
 int
 funct_group14_87();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_86()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8583,7 +8586,7 @@ funct_group14_87()
 int
 funct_group14_89();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_88()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8597,7 +8600,7 @@ funct_group14_88()
 int
 funct_group14_90();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_89()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8611,7 +8614,7 @@ funct_group14_89()
 int
 funct_group14_91();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_90()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8639,7 +8642,7 @@ funct_group14_91()
 int
 funct_group14_93();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_92()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8653,7 +8656,7 @@ funct_group14_92()
 int
 funct_group14_94();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_93()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8667,7 +8670,7 @@ funct_group14_93()
 int
 funct_group14_95();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group14_94()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8697,7 +8700,7 @@ funct_group14_95()
 int
 funct_group15_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group15_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8725,7 +8728,7 @@ funct_group15_1()
 int
 funct_group15_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group15_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8753,7 +8756,7 @@ funct_group15_3()
 int
 funct_group15_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group15_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8783,7 +8786,7 @@ funct_group15_5()
 int
 funct_group16_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8811,7 +8814,7 @@ funct_group16_1()
 int
 funct_group16_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8839,7 +8842,7 @@ funct_group16_3()
 int
 funct_group16_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8867,7 +8870,7 @@ funct_group16_5()
 int
 funct_group16_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8895,7 +8898,7 @@ funct_group16_7()
 int
 funct_group16_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8923,7 +8926,7 @@ funct_group16_9()
 int
 funct_group16_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group16_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8953,7 +8956,7 @@ funct_group16_11()
 int
 funct_group17_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -8981,7 +8984,7 @@ funct_group17_1()
 int
 funct_group17_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9009,7 +9012,7 @@ funct_group17_3()
 int
 funct_group17_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9037,7 +9040,7 @@ funct_group17_5()
 int
 funct_group17_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9065,7 +9068,7 @@ funct_group17_7()
 int
 funct_group17_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9093,7 +9096,7 @@ funct_group17_9()
 int
 funct_group17_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9121,7 +9124,7 @@ funct_group17_11()
 int
 funct_group17_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9149,7 +9152,7 @@ funct_group17_13()
 int
 funct_group17_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9177,7 +9180,7 @@ funct_group17_15()
 int
 funct_group17_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9205,7 +9208,7 @@ funct_group17_17()
 int
 funct_group17_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9233,7 +9236,7 @@ funct_group17_19()
 int
 funct_group17_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9261,7 +9264,7 @@ funct_group17_21()
 int
 funct_group17_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group17_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9291,7 +9294,7 @@ funct_group17_23()
 int
 funct_group18_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9319,7 +9322,7 @@ funct_group18_1()
 int
 funct_group18_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9347,7 +9350,7 @@ funct_group18_3()
 int
 funct_group18_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9375,7 +9378,7 @@ funct_group18_5()
 int
 funct_group18_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9403,7 +9406,7 @@ funct_group18_7()
 int
 funct_group18_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9431,7 +9434,7 @@ funct_group18_9()
 int
 funct_group18_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9459,7 +9462,7 @@ funct_group18_11()
 int
 funct_group18_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9487,7 +9490,7 @@ funct_group18_13()
 int
 funct_group18_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9515,7 +9518,7 @@ funct_group18_15()
 int
 funct_group18_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9543,7 +9546,7 @@ funct_group18_17()
 int
 funct_group18_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9571,7 +9574,7 @@ funct_group18_19()
 int
 funct_group18_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9599,7 +9602,7 @@ funct_group18_21()
 int
 funct_group18_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9627,7 +9630,7 @@ funct_group18_23()
 int
 funct_group18_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9655,7 +9658,7 @@ funct_group18_25()
 int
 funct_group18_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9683,7 +9686,7 @@ funct_group18_27()
 int
 funct_group18_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9711,7 +9714,7 @@ funct_group18_29()
 int
 funct_group18_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9739,7 +9742,7 @@ funct_group18_31()
 int
 funct_group18_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9767,7 +9770,7 @@ funct_group18_33()
 int
 funct_group18_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9795,7 +9798,7 @@ funct_group18_35()
 int
 funct_group18_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9823,7 +9826,7 @@ funct_group18_37()
 int
 funct_group18_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9851,7 +9854,7 @@ funct_group18_39()
 int
 funct_group18_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9879,7 +9882,7 @@ funct_group18_41()
 int
 funct_group18_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9907,7 +9910,7 @@ funct_group18_43()
 int
 funct_group18_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9935,7 +9938,7 @@ funct_group18_45()
 int
 funct_group18_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group18_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9965,7 +9968,7 @@ funct_group18_47()
 int
 funct_group19_1();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_0()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -9993,7 +9996,7 @@ funct_group19_1()
 int
 funct_group19_3();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_2()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10021,7 +10024,7 @@ funct_group19_3()
 int
 funct_group19_5();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_4()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10049,7 +10052,7 @@ funct_group19_5()
 int
 funct_group19_7();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_6()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10077,7 +10080,7 @@ funct_group19_7()
 int
 funct_group19_9();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_8()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10105,7 +10108,7 @@ funct_group19_9()
 int
 funct_group19_11();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_10()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10133,7 +10136,7 @@ funct_group19_11()
 int
 funct_group19_13();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_12()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10161,7 +10164,7 @@ funct_group19_13()
 int
 funct_group19_15();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_14()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10189,7 +10192,7 @@ funct_group19_15()
 int
 funct_group19_17();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_16()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10217,7 +10220,7 @@ funct_group19_17()
 int
 funct_group19_19();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_18()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10245,7 +10248,7 @@ funct_group19_19()
 int
 funct_group19_21();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_20()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10273,7 +10276,7 @@ funct_group19_21()
 int
 funct_group19_23();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_22()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10301,7 +10304,7 @@ funct_group19_23()
 int
 funct_group19_25();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_24()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10329,7 +10332,7 @@ funct_group19_25()
 int
 funct_group19_27();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_26()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10357,7 +10360,7 @@ funct_group19_27()
 int
 funct_group19_29();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_28()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10385,7 +10388,7 @@ funct_group19_29()
 int
 funct_group19_31();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_30()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10413,7 +10416,7 @@ funct_group19_31()
 int
 funct_group19_33();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_32()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10441,7 +10444,7 @@ funct_group19_33()
 int
 funct_group19_35();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_34()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10469,7 +10472,7 @@ funct_group19_35()
 int
 funct_group19_37();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_36()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10497,7 +10500,7 @@ funct_group19_37()
 int
 funct_group19_39();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_38()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10525,7 +10528,7 @@ funct_group19_39()
 int
 funct_group19_41();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_40()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10553,7 +10556,7 @@ funct_group19_41()
 int
 funct_group19_43();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_42()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10581,7 +10584,7 @@ funct_group19_43()
 int
 funct_group19_45();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_44()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10609,7 +10612,7 @@ funct_group19_45()
 int
 funct_group19_47();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_46()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10637,7 +10640,7 @@ funct_group19_47()
 int
 funct_group19_49();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_48()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10665,7 +10668,7 @@ funct_group19_49()
 int
 funct_group19_51();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_50()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10693,7 +10696,7 @@ funct_group19_51()
 int
 funct_group19_53();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_52()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10721,7 +10724,7 @@ funct_group19_53()
 int
 funct_group19_55();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_54()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10749,7 +10752,7 @@ funct_group19_55()
 int
 funct_group19_57();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_56()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10777,7 +10780,7 @@ funct_group19_57()
 int
 funct_group19_59();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_58()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10805,7 +10808,7 @@ funct_group19_59()
 int
 funct_group19_61();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_60()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10833,7 +10836,7 @@ funct_group19_61()
 int
 funct_group19_63();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_62()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10861,7 +10864,7 @@ funct_group19_63()
 int
 funct_group19_65();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_64()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10889,7 +10892,7 @@ funct_group19_65()
 int
 funct_group19_67();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_66()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10917,7 +10920,7 @@ funct_group19_67()
 int
 funct_group19_69();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_68()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10945,7 +10948,7 @@ funct_group19_69()
 int
 funct_group19_71();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_70()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -10973,7 +10976,7 @@ funct_group19_71()
 int
 funct_group19_73();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_72()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11001,7 +11004,7 @@ funct_group19_73()
 int
 funct_group19_75();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_74()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11029,7 +11032,7 @@ funct_group19_75()
 int
 funct_group19_77();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_76()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11057,7 +11060,7 @@ funct_group19_77()
 int
 funct_group19_79();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_78()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11085,7 +11088,7 @@ funct_group19_79()
 int
 funct_group19_81();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_80()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11113,7 +11116,7 @@ funct_group19_81()
 int
 funct_group19_83();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_82()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11141,7 +11144,7 @@ funct_group19_83()
 int
 funct_group19_85();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_84()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11169,7 +11172,7 @@ funct_group19_85()
 int
 funct_group19_87();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_86()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11197,7 +11200,7 @@ funct_group19_87()
 int
 funct_group19_89();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_88()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11225,7 +11228,7 @@ funct_group19_89()
 int
 funct_group19_91();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_90()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11253,7 +11256,7 @@ funct_group19_91()
 int
 funct_group19_93();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_92()
 {
   volatile static std::uint32_t inner_side_effect = 0;
@@ -11281,7 +11284,7 @@ funct_group19_93()
 int
 funct_group19_95();
 
-[[gnu::section(".trivial_handle")]] int
+int
 funct_group19_94()
 {
   volatile static std::uint32_t inner_side_effect = 0;

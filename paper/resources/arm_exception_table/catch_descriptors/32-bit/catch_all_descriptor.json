@@ -1,0 +1,31 @@
+{
+  "reg": [
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 31,
+      "name": "offset << 1"
+    },
+    {
+      "bits": 1,
+      "name": 1
+    },
+    {
+      "bits": 31,
+      "name": "length << 1"
+    },
+    {
+      "bits": 32,
+      "name": -1
+    }
+  ],
+  "config": {
+    "fontsize": 16,
+    "bits": 96,
+    "hflip": true,
+    "lanes": 3,
+    "compact": true
+  }
+}

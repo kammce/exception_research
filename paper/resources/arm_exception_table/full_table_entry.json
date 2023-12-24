@@ -1,0 +1,51 @@
+{
+  "reg": [
+    {
+      "bits": 32,
+      "name": "Personality Info",
+      "type": 6
+    },
+    {
+      "bits": 32,
+      "name": "... function unwind instructions for long 16/32 ...",
+      "type": 5
+    },
+    {
+      "bits": 32,
+      "name": "descriptor 1",
+      "type": 7
+    },
+    {
+      "bits": 32,
+      "name": "descriptor 2",
+      "type": 7
+    },
+    {
+      "bits": 32,
+      "name": "...",
+      "type": 1
+    },
+    {
+      "bits": 32,
+      "name": "descriptor N - 1",
+      "type": 7
+    },
+    {
+      "bits": 32,
+      "name": "descriptor N",
+      "type": 7
+    },
+    {
+      "bits": 32,
+      "name": 0,
+      "type": 1
+    }
+  ],
+  "config": {
+    "fontsize": 14,
+    "bits": 256,
+    "hflip": true,
+    "lanes": 8,
+    "compact": true
+  }
+}

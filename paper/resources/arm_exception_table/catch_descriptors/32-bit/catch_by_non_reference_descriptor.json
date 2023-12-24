@@ -1,0 +1,39 @@
+{
+  "reg": [
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 31,
+      "name": "offset << 1"
+    },
+    {
+      "bits": 1,
+      "name": 1
+    },
+    {
+      "bits": 31,
+      "name": "length << 1"
+    },
+    {
+      "bits": 31,
+      "name": "prel31 offset to catch landing pad"
+    },
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 32,
+      "name": "address of catch type_info"
+    }
+  ],
+  "config": {
+    "fontsize": 16,
+    "bits": 96,
+    "hflip": true,
+    "lanes": 3,
+    "compact": true
+  }
+}

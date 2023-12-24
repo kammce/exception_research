@@ -1,0 +1,15 @@
+{
+  "reg": [
+    {
+      "bits": 32,
+      "name": 0
+    }
+  ],
+  "config": {
+    "fontsize": 16,
+    "bits": 32,
+    "hflip": true,
+    "lanes": 1,
+    "compact": true
+  }
+}

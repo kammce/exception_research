@@ -1,0 +1,35 @@
+{
+  "reg": [
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 31,
+      "name": "offset << 1"
+    },
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 31,
+      "name": "length << 1"
+    },
+    {
+      "bits": 31,
+      "name": "prel31 offset to cleanup landing pad"
+    },
+    {
+      "bits": 1,
+      "name": 0
+    }
+  ],
+  "config": {
+    "fontsize": 16,
+    "bits": 96,
+    "hflip": true,
+    "lanes": 3,
+    "compact": true
+  }
+}

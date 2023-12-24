@@ -1,4 +1,5 @@
 **/test_suite/*
 .DS_Store
 **/build/*
+.vscode/
 CMakeUserPresets.json

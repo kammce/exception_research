@@ -1,0 +1,24 @@
+{
+  "reg": [
+    {
+      "bits": 31,
+      "name": "prel31 offset to function"
+    },
+    {
+      "bits": 1,
+      "name": 0
+    },
+    {
+      "bits": 32,
+      "name": 1,
+      "attr": "EXIDX_CANTUNWIND"
+    }
+  ],
+  "config": {
+    "fontsize": 14,
+    "bits": 64,
+    "hflip": true,
+    "lanes": 2,
+    "compact": true
+  }
+}
